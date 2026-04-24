@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>محاكي الاحتمالات - إصدار الرسم البياني</title>
+    <style>
+        :root {
+            --ink: #121212;
+            --wood: #C4A484;
+            --paper: #E8E2D0;
+            --bg: #9A938A;
+        }
+
+        body { 
+            background: var(--bg); 
+            font-family: 'Cairo', sans-serif; 
+            margin: 0; overflow: hidden; 
+            perspective: 2000px; 
+        }
+        
+        .scene { 
+            width: 100vw; height: 100vh; 
+            transition: transform 1.2s ease-in-out; 
+            transform-style: preserve-3d;
+            display: flex; justify-content: center; align-items: center;
+        }
+        
+        .look-left { transform: rotateY(25deg) translateX(12%); }
+
+        .desk { 
+            position: relative; width: 92%; height: 88%; 
+            background: var(--wood); border: 8px solid var(--ink); 
+            display: flex; justify-content: space-around; align-items: center;
+            box-shadow: 15px 15px 0px rgba(0,0,0,0.2);
+        }
+
+        /* الدفتر المطور بالرسم البياني */
+        .notebook { 
+            width: 340px; height: 500px; 
+            background: var(--paper); padding: 25px; 
+            border: 6px solid var(--ink); position: relative;
+            box-shadow: 10px 10px 0px rgba(0,0,0,0.1);
+        }
+
+        /* حاوية الرسم البياني */
+        .chart-container {
+            display: flex; justify-content: space-around; align-items: flex-end;
+            height: 150px; border-bottom: 4px solid var(--ink);
+            margin-bottom: 20px; padding-bottom: 5px;
+        }
+
+        .bar {
+            width: 40px; background: #8E1C1C;
+            border: 3px solid var(--ink);
+            transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .bar-label {
+            position: absolute; bottom: -35px; width: 100%;
+            text-align: center; font-weight: bold; font-size: 18px;
+        }
+
+        /* باقي العناصر */
+        .history-trigger { position: absolute; left: 0; top: 0; width: 180px; height: 100%; cursor: pointer; }
+        .history-pile { position: absolute; left: 20px; top: 30%; width: 220px; height: 300px; transform: rotate(-10deg); }
+
+        .deck { width: 160px; height: 230px; background: #8E1C1C; border: 7px solid var(--ink); border-radius: 8px; cursor: pointer; box-shadow: 8px 8px 0px rgba(0,0,0,0.2); }
+        
+        .drawn-card {
+            position: absolute; width: 160px; height: 230px; background: #fff;
+            border: 7px solid var(--ink); border-radius: 8px;
+            top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            transition: 0.8s; z-index: 100; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; font-size: 60px; font-weight: bold;
+        }
+        .drawn-card.active { transform: translate(-50%, -50%) scale(1.6) rotateY(180deg); }
+
+        .info-icon {
+            position: absolute; top: -20px; right: -20px;
+            background: #D35400; color: white; width: 50px; height: 50px;
+            border-radius: 50%; display: none; align-items: center; justify-content: center;
+            font-size: 30px; border: 5px solid var(--ink); cursor: pointer;
+        }
+
+        #explanation-box {
+            display: none; position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); width: 440px; 
+            background: var(--paper); padding: 30px;
+            border: 8px solid var(--ink); box-shadow: 20px 20px 0px rgba(0,0,0,0.3); z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+
+<div class="scene" id="scene">
+    <div class="desk">
+        <div class="history-trigger" onclick="toggleCamera()">
+            <div class="history-pile" id="historyPile"></div>
+        </div>
+
+        <div class="center-area">
+            <div class="deck" onclick="drawCard()"></div>
+            <div class="drawn-card" id="cardDisplay"></div>
+        </div>
+
+        <div class="notebook" onclick="showExplanation()">
+            <div class="info-icon" id="infoIcon">؟</div>
+            <h3>📋 تحليل بياني</h3>
+            
+            <div class="chart-container">
+                <div class="bar" id="bar-H" style="height: 100%"><div class="bar-label">♥</div></div>
+                <div class="bar" id="bar-S" style="height: 100%; background: #222"><div class="bar-label">♠</div></div>
+                <div class="bar" id="bar-D" style="height: 100%"><div class="bar-label">♦</div></div>
+                <div class="bar" id="bar-C" style="height: 100%; background: #222"><div class="bar-label">♣</div></div>
+            </div>
+
+            <div id="stats" style="margin-top: 40px;">
+                <p>سوف تظهر النسب هنا...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="explanation-box">
+    <h3>🔍 ماذا حدث للرسم البياني؟</h3>
+    <p id="exp-text"></p>
+    <button onclick="closeExplanation()" style="width:100%; padding:10px; border:4px solid var(--ink); cursor:pointer; font-weight:bold;">مفهوم!</button>
+</div>
+
+<script>
+    let deck = [];
+    let counts = { 'H': 13, 'S': 13, 'D': 13, 'C': 13 };
+    let symbols = { 'H': '♥', 'S': '♠', 'D': '♦', 'C': '♣' };
+    let history = [];
+
+    function init() {
+        for (let s in counts) {
+            let values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+            for (let v of values) deck.push({s, v});
+        }
+    }
+    init();
+
+    function drawCard() {
+        if (deck.length === 0) return;
+        let idx = Math.floor(Math.random() * deck.length);
+        let card = deck.splice(idx, 1)[0];
+        counts[card.s]--;
+        history.push(card);
+
+        const display = document.getElementById('cardDisplay');
+        let color = (card.s == 'H' || card.s == 'D') ? '#8E1C1C' : '#121212';
+        display.innerHTML = `<div style="transform: rotateY(180deg)">${card.v}<br><span style="color:${color}">${symbols[card.s]}</span></div>`;
+        display.classList.add('active');
+
+        setTimeout(() => {
+            display.classList.remove('active');
+            updateUI(card);
+            addToHistory();
+        }, 1400);
+    }
+
+    function updateUI(card) {
+        let total = deck.length;
+        let statsHtml = "";
+        
+        for (let s in counts) {
+            let prob = total > 0 ? ((counts[s] / total) * 100).toFixed(1) : 0;
+            
+            // تحديث الرسم البياني (طول العمود)
+            // نستخدم 13 كحد أقصى للارتفاع (100%)
+            let heightPercent = (counts[s] / 13) * 100;
+            document.getElementById(`bar-${s}`).style.height = heightPercent + "%";
+            
+            statsHtml += `<p style="font-size:1.1rem; border-bottom:2px solid var(--ink); margin:8px 0;">${symbols[s]} : ${prob}%</p>`;
+        }
+        document.getElementById('stats').innerHTML = statsHtml;
+        document.getElementById('infoIcon').style.display = 'flex';
+
+        document.getElementById('exp-text').innerHTML = 
+            `لقد سحبنا <b>${card.v} ${symbols[card.s]}</b>.<br><br>` +
+            `انظري للرسم البياني: عمود الـ <b>${symbols[card.s]}</b> أصبح أقصر الآن لأن عدده قل.<br><br>` +
+            `بما أن المجموع الكلي صغر، فالأعمدة الأخرى (التي لم تنقص) أصبحت قيمتها "النسبية" أكبر مقارنة به!`;
+    }
+
+    function addToHistory() {
+        const pile = document.getElementById('historyPile');
+        const paper = document.createElement('div');
+        paper.style.cssText = `position:absolute; width:110px; height:150px; background:white; border:5px solid var(--ink); 
+                               top:${Math.random()*20}px; left:${Math.random()*20}px; transform:rotate(${Math.random()*20-10}deg);`;
+        pile.appendChild(paper);
+    }
+
+    function toggleCamera() { document.getElementById('scene').classList.toggle('look-left'); }
+    function showExplanation() { if (history.length > 0) document.getElementById('explanation-box').style.display = 'block'; }
+    function closeExplanation() { document.getElementById('explanation-box').style.display = 'none'; document.getElementById('infoIcon').style.display = 'none'; }
+</script>
+</body>
+</html>
