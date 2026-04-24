@@ -2,17 +2,17 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>محاكي الاحتمالات - إصدار الرسم البياني</title>
+    <title>محاكي الاحتمالات السينمائي</title>
     <style>
         :root {
             --ink: #121212;
-            --wood: #C4A484;
             --paper: #E8E2D0;
-            --bg: #9A938A;
+            /* صورة خلفية للمكتب (خشب كرتوني) */
+            --desk-img: url('https://img.freepik.com/free-vector/hand-drawn-wood-texture-background_23-2148981615.jpg');
         }
 
         body { 
-            background: var(--bg); 
+            background: #2c2c2c; 
             font-family: 'Cairo', sans-serif; 
             margin: 0; overflow: hidden; 
             perspective: 2000px; 
@@ -27,67 +27,80 @@
         
         .look-left { transform: rotateY(25deg) translateX(12%); }
 
+        /* المكتب مع صورة خشب */
         .desk { 
             position: relative; width: 92%; height: 88%; 
-            background: var(--wood); border: 8px solid var(--ink); 
+            background-image: var(--desk-img);
+            background-size: cover;
+            border: 8px solid var(--ink); 
             display: flex; justify-content: space-around; align-items: center;
-            box-shadow: 15px 15px 0px rgba(0,0,0,0.2);
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.5), 15px 15px 0px rgba(0,0,0,0.3);
         }
 
-        /* الدفتر المطور بالرسم البياني */
+        /* الدفتر */
         .notebook { 
-            width: 340px; height: 500px; 
+            width: 320px; height: 500px; 
             background: var(--paper); padding: 25px; 
             border: 6px solid var(--ink); position: relative;
-            box-shadow: 10px 10px 0px rgba(0,0,0,0.1);
+            box-shadow: 10px 10px 0px rgba(0,0,0,0.2);
         }
 
-        /* حاوية الرسم البياني */
+        /* الرسم البياني */
         .chart-container {
             display: flex; justify-content: space-around; align-items: flex-end;
             height: 150px; border-bottom: 4px solid var(--ink);
-            margin-bottom: 20px; padding-bottom: 5px;
+            margin-bottom: 25px; padding-bottom: 5px;
+            background: rgba(0,0,0,0.02);
         }
 
         .bar {
-            width: 40px; background: #8E1C1C;
-            border: 3px solid var(--ink);
-            transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 35px; border: 4px solid var(--ink);
+            transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
         }
 
-        .bar-label {
-            position: absolute; bottom: -35px; width: 100%;
-            text-align: center; font-weight: bold; font-size: 18px;
+        .bar-label { position: absolute; bottom: -35px; width: 100%; text-align: center; font-weight: bold; }
+
+        /* رزمة الكروت (بصورة ظهر الكارت) */
+        .deck { 
+            width: 160px; height: 230px; 
+            background-image: url('https://i.pinimg.com/736x/81/44/7e/81447e704040a4d805096f264870f07f.jpg');
+            background-size: cover;
+            border: 6px solid var(--ink); border-radius: 8px; 
+            cursor: pointer; box-shadow: 8px 8px 0px rgba(0,0,0,0.3);
         }
 
-        /* باقي العناصر */
-        .history-trigger { position: absolute; left: 0; top: 0; width: 180px; height: 100%; cursor: pointer; }
-        .history-pile { position: absolute; left: 20px; top: 30%; width: 220px; height: 300px; transform: rotate(-10deg); }
-
-        .deck { width: 160px; height: 230px; background: #8E1C1C; border: 7px solid var(--ink); border-radius: 8px; cursor: pointer; box-shadow: 8px 8px 0px rgba(0,0,0,0.2); }
-        
+        /* الكارت المسحوب */
         .drawn-card {
             position: absolute; width: 160px; height: 230px; background: #fff;
-            border: 7px solid var(--ink); border-radius: 8px;
+            border: 6px solid var(--ink); border-radius: 8px;
             top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
             transition: 0.8s; z-index: 100; display: flex; flex-direction: column; 
-            align-items: center; justify-content: center; font-size: 60px; font-weight: bold;
+            align-items: center; justify-content: center; font-size: 50px; font-weight: bold;
         }
         .drawn-card.active { transform: translate(-50%, -50%) scale(1.6) rotateY(180deg); }
 
+        /* أوراق السجل (صور مبعثرة) */
+        .history-trigger { position: absolute; left: 0; top: 0; width: 200px; height: 100%; cursor: pointer; z-index: 5; }
+        .history-pile { position: absolute; left: 30px; top: 30%; width: 220px; height: 300px; transform: rotate(-10deg); }
+        .pile-card {
+            position: absolute; width: 100px; height: 140px; background: #fff;
+            border: 4px solid var(--ink); box-shadow: 3px 3px 0px rgba(0,0,0,0.1);
+            display: flex; align-items: center; justify-content: center; font-size: 20px;
+        }
+
         .info-icon {
-            position: absolute; top: -20px; right: -20px;
-            background: #D35400; color: white; width: 50px; height: 50px;
+            position: absolute; top: -25px; right: -25px;
+            background: #D35400; color: white; width: 55px; height: 55px;
             border-radius: 50%; display: none; align-items: center; justify-content: center;
-            font-size: 30px; border: 5px solid var(--ink); cursor: pointer;
+            font-size: 32px; border: 5px solid var(--ink); cursor: pointer;
         }
 
         #explanation-box {
             display: none; position: fixed; top: 50%; left: 50%;
             transform: translate(-50%, -50%); width: 440px; 
             background: var(--paper); padding: 30px;
-            border: 8px solid var(--ink); box-shadow: 20px 20px 0px rgba(0,0,0,0.3); z-index: 1000;
+            border: 8px solid var(--ink); box-shadow: 20px 20px 0px rgba(0,0,0,0.4); z-index: 1000;
         }
     </style>
 </head>
@@ -95,7 +108,7 @@
 
 <div class="scene" id="scene">
     <div class="desk">
-        <div class="history-trigger" onclick="toggleCamera()">
+        <div class="history-trigger" onclick="toggleCamera()" title="انظر للسجل">
             <div class="history-pile" id="historyPile"></div>
         </div>
 
@@ -106,26 +119,25 @@
 
         <div class="notebook" onclick="showExplanation()">
             <div class="info-icon" id="infoIcon">؟</div>
-            <h3>📋 تحليل بياني</h3>
+            <h3>📋 جدول الاحتمالات</h3>
             
             <div class="chart-container">
-                <div class="bar" id="bar-H" style="height: 100%"><div class="bar-label">♥</div></div>
+                <div class="bar" id="bar-H" style="height: 100%; background: #D14949;"><div class="bar-label">♥</div></div>
                 <div class="bar" id="bar-S" style="height: 100%; background: #222"><div class="bar-label">♠</div></div>
-                <div class="bar" id="bar-D" style="height: 100%"><div class="bar-label">♦</div></div>
+                <div class="bar" id="bar-D" style="height: 100%; background: #D14949;"><div class="bar-label">♦</div></div>
                 <div class="bar" id="bar-C" style="height: 100%; background: #222"><div class="bar-label">♣</div></div>
             </div>
 
-            <div id="stats" style="margin-top: 40px;">
-                <p>سوف تظهر النسب هنا...</p>
-            </div>
+            <div id="stats" style="margin-top: 30px;">
+                </div>
         </div>
     </div>
 </div>
 
 <div id="explanation-box">
-    <h3>🔍 ماذا حدث للرسم البياني؟</h3>
+    <h3>🔍 لماذا تغيرت الاحتمالات؟</h3>
     <p id="exp-text"></p>
-    <button onclick="closeExplanation()" style="width:100%; padding:10px; border:4px solid var(--ink); cursor:pointer; font-weight:bold;">مفهوم!</button>
+    <button onclick="closeExplanation()" style="width:100%; padding:12px; border:4px solid var(--ink); cursor:pointer; font-weight:bold; background:#34495E; color:white;">فهمت!</button>
 </div>
 
 <script>
@@ -139,6 +151,7 @@
             let values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
             for (let v of values) deck.push({s, v});
         }
+        updateUI(); // إظهار الاحتمالات قبل السحب
     }
     init();
 
@@ -150,14 +163,14 @@
         history.push(card);
 
         const display = document.getElementById('cardDisplay');
-        let color = (card.s == 'H' || card.s == 'D') ? '#8E1C1C' : '#121212';
+        let color = (card.s == 'H' || card.s == 'D') ? '#D14949' : '#121212';
         display.innerHTML = `<div style="transform: rotateY(180deg)">${card.v}<br><span style="color:${color}">${symbols[card.s]}</span></div>`;
         display.classList.add('active');
 
         setTimeout(() => {
             display.classList.remove('active');
             updateUI(card);
-            addToHistory();
+            addToHistory(card);
         }, 1400);
     }
 
@@ -167,33 +180,33 @@
         
         for (let s in counts) {
             let prob = total > 0 ? ((counts[s] / total) * 100).toFixed(1) : 0;
-            
-            // تحديث الرسم البياني (طول العمود)
-            // نستخدم 13 كحد أقصى للارتفاع (100%)
-            let heightPercent = (counts[s] / 13) * 100;
-            document.getElementById(`bar-${s}`).style.height = heightPercent + "%";
-            
-            statsHtml += `<p style="font-size:1.1rem; border-bottom:2px solid var(--ink); margin:8px 0;">${symbols[s]} : ${prob}%</p>`;
+            if (history.length === 0) prob = "25.0"; // القيمة الابتدائية
+
+            document.getElementById(`bar-${s}`).style.height = (counts[s] / 13 * 100) + "%";
+            statsHtml += `<p style="font-size:1.2rem; border-bottom:3px solid rgba(0,0,0,0.1); margin:10px 0; padding-bottom:5px;">احتمالية سحب ${symbols[s]} : <b>${prob}%</b></p>`;
         }
         document.getElementById('stats').innerHTML = statsHtml;
-        document.getElementById('infoIcon').style.display = 'flex';
-
-        document.getElementById('exp-text').innerHTML = 
-            `لقد سحبنا <b>${card.v} ${symbols[card.s]}</b>.<br><br>` +
-            `انظري للرسم البياني: عمود الـ <b>${symbols[card.s]}</b> أصبح أقصر الآن لأن عدده قل.<br><br>` +
-            `بما أن المجموع الكلي صغر، فالأعمدة الأخرى (التي لم تنقص) أصبحت قيمتها "النسبية" أكبر مقارنة به!`;
+        if (history.length > 0) {
+            document.getElementById('infoIcon').style.display = 'flex';
+            document.getElementById('exp-text').innerHTML = 
+                `بما أننا سحبنا <b>${card.v} ${symbols[card.s]}</b>، قل عدده في المجموعة.<br><br>` +
+                `المجموع الكلي قل فأصبح <b>${total}</b>. انظري كيف قصر عمود الـ (${symbols[card.s]}) في الرسم البياني!<br><br>` +
+                `لذلك، ارتفعت <b>الاحتمالات</b> للأنواع الأخرى لأن حصتها من المجموع المتبقي أصبحت أكبر بصرياً ورياضياً.`;
+        }
     }
 
-    function addToHistory() {
+    function addToHistory(card) {
         const pile = document.getElementById('historyPile');
-        const paper = document.createElement('div');
-        paper.style.cssText = `position:absolute; width:110px; height:150px; background:white; border:5px solid var(--ink); 
-                               top:${Math.random()*20}px; left:${Math.random()*20}px; transform:rotate(${Math.random()*20-10}deg);`;
-        pile.appendChild(paper);
+        const cardEl = document.createElement('div');
+        cardEl.className = 'pile-card';
+        let color = (card.s == 'H' || card.s == 'D') ? '#D14949' : '#121212';
+        cardEl.style.cssText = `top:${Math.random()*30}px; left:${Math.random()*30}px; transform:rotate(${Math.random()*30-15}deg); color:${color};`;
+        cardEl.innerHTML = card.v + symbols[card.s];
+        pile.appendChild(cardEl);
     }
 
     function toggleCamera() { document.getElementById('scene').classList.toggle('look-left'); }
-    function showExplanation() { if (history.length > 0) document.getElementById('explanation-box').style.display = 'block'; }
+    function showExplanation() { document.getElementById('explanation-box').style.display = 'block'; }
     function closeExplanation() { document.getElementById('explanation-box').style.display = 'none'; document.getElementById('infoIcon').style.display = 'none'; }
 </script>
 </body>
