@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>محاكي الاحتمالات الاحترافي</title>
+    <title>محاكي الاحتمالات - النسخة المعتمدة</title>
     <style>
         :root {
             --ink: #1a1a1a;
@@ -12,61 +12,133 @@
 
         body { background: #222; font-family: 'Cairo', sans-serif; margin: 0; overflow: hidden; }
 
+        /* الطاولة */
         .main-scene {
             width: 100vw; height: 100vh;
             background: var(--desk) url('https://www.transparenttextures.com/patterns/wood-pattern.png');
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             position: relative;
         }
 
-        /* جدول الاحتمالات الظاهر دائماً */
+        /* لوحة الاحتمالات - ثابتة وواضحة */
         .probability-board {
-            width: 350px; background: var(--paper); border: 5px solid var(--ink);
-            padding: 20px; box-shadow: 10px 10px 0px rgba(0,0,0,0.2);
-            position: absolute; left: 5%; top: 10%; z-index: 10;
+            position: absolute; top: 5%; left: 5%;
+            width: 320px; background: var(--paper);
+            border: 5px solid var(--ink); padding: 20px;
+            box-shadow: 10px 10px 0px rgba(0,0,0,0.2);
         }
 
         .chart-container {
             display: flex; justify-content: space-around; align-items: flex-end;
-            height: 150px; border-bottom: 4px solid var(--ink); margin: 20px 0;
+            height: 180px; border-bottom: 4px solid var(--ink); margin-bottom: 15px;
         }
 
-        .bar { width: 30px; border: 3px solid var(--ink); transition: height 0.6s ease; position: relative; }
-        .bar-label { position: absolute; bottom: -30px; width: 100%; text-align: center; font-weight: bold; }
+        .bar { width: 35px; border: 3px solid var(--ink); transition: height 0.6s ease; position: relative; }
+        .bar-label { position: absolute; bottom: -35px; width: 100%; text-align: center; font-weight: bold; }
 
-        /* رزمة الورق الجديدة */
+        /* رزمة الورق - تصميم هادئ */
         .deck {
-            width: 150px; height: 210px; 
-            background: linear-gradient(135deg, #a32a2a 0%, #7c1f1f 100%);
+            position: absolute; right: 10%; bottom: 10%;
+            width: 140px; height: 200px;
+            background: linear-gradient(135deg, #a32a2a, #7c1f1f);
             border: 4px solid var(--ink); border-radius: 12px;
-            cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            cursor: pointer; box-shadow: 8px 8px 0px var(--ink);
             display: flex; align-items: center; justify-content: center;
-            position: absolute; right: 15%; bottom: 15%;
         }
-        .deck::after { content: "♠"; color: rgba(255,255,255,0.1); font-size: 60px; }
+        .deck::after { content: "♠"; color: rgba(255,255,255,0.2); font-size: 50px; }
 
-        /* الكارت المسحوب */
-        .card-display-area {
+        /* منطقة عرض الكارت */
+        .card-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.4); display: none;
-            justify-content: center; align-items: center; z-index: 100;
+            background: rgba(0,0,0,0.6); display: none;
+            justify-content: center; align-items: center; z-index: 1000;
+            cursor: pointer;
         }
 
         .active-card {
-            width: 200px; height: 280px; background: white;
+            width: 220px; height: 310px; background: white;
             border: 8px solid var(--ink); border-radius: 15px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            font-size: 80px; font-weight: bold; box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            font-size: 80px; font-weight: bold;
         }
 
         .info-btn {
-            background: #3498db; color: white; width: 35px; height: 35px;
-            border-radius: 50%; border: 3px solid var(--ink); cursor: pointer;
-            float: left; font-weight: bold;
+            position: absolute; top: 10px; right: 10px;
+            width: 30px; height: 30px; border-radius: 50%;
+            border: 2px solid var(--ink); background: #3498db; color: white;
+            cursor: pointer; font-weight: bold;
         }
+    </style>
+</head>
+<body>
 
-        #explanation-text {
-            display: none; background: #fff; padding: 10px; border: 2px solid var(--ink);
+    <div class="main-scene">
+        <div class="probability-board">
+            <button class="info-btn" onclick="alert('الأعمدة توضح احتمالية سحب كل نوع. عند السحب، يقل احتمال النوع المسحوب وتزيد الأنواع الأخرى.')">؟</button>
+            <h3 style="text-align:center; margin-top:0;">📊 جدول الاحتمالات</h3>
+            <div class="chart-container">
+                <div class="bar" id="bar-H" style="height:25%; background:#d14949;"><div class="bar-label">♥</div></div>
+                <div class="bar" id="bar-S" style="height:25%; background:#333;"><div class="bar-label">♠</div></div>
+                <div class="bar" id="bar-D" style="height:25%; background:#d14949;"><div class="bar-label">♦</div></div>
+                <div class="bar" id="bar-C" style="height:25%; background:#333;"><div class="bar-label">♣</div></div>
+            </div>
+            <div id="prob-text" style="display:flex; justify-content: space-around; font-weight:bold; padding-top:20px;">
+                <span>25%</span><span>25%</span><span>25%</span><span>25%</span>
+            </div>
+        </div>
+
+        <div class="deck" onclick="drawCard()"></div>
+
+        <div style="position:absolute; bottom:5%; left:5%; color:white; font-weight:bold;">
+            الورق المتبقي: <span id="counter">52</span>
+        </div>
+    </div>
+
+    <div id="overlay" class="card-overlay" onclick="closeCard()">
+        <div id="displayCard" class="active-card"></div>
+        <p style="position:absolute; bottom:15%; color:white;">انقر في أي مكان لإعادة الكارت للسجل...</p>
+    </div>
+
+<script>
+    let counts = { 'H': 13, 'S': 13, 'D': 13, 'C': 13 };
+    let symbols = { 'H': '♥', 'S': '♠', 'D': '♦', 'C': '♣' };
+
+    function drawCard() {
+        let suits = Object.keys(counts).filter(s => counts[s] > 0);
+        if (suits.length === 0) return;
+
+        let s = suits[Math.floor(Math.random() * suits.length)];
+        let v = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'][Math.floor(Math.random() * 13)];
+        
+        counts[s]--;
+        
+        const overlay = document.getElementById('overlay');
+        const display = document.getElementById('displayCard');
+        display.innerHTML = v + "<br>" + symbols[s];
+        display.style.color = (s=='H'||s=='D') ? '#d14949' : '#1a1a1a';
+        overlay.style.display = 'flex';
+
+        updateStats();
+    }
+
+    function closeCard() {
+        document.getElementById('overlay').style.display = 'none';
+    }
+
+    function updateStats() {
+        let total = Object.values(counts).reduce((a, b) => a + b, 0);
+        let txt = "";
+        for (let s in counts) {
+            let p = total > 0 ? (counts[s] / total * 100) : 0;
+            document.getElementById(`bar-${s}`).style.height = p + "%";
+            txt += `<span>${Math.round(p)}%</span>`;
+        }
+        document.getElementById('prob-text').innerHTML = txt;
+        document.getElementById('counter').innerText = total;
+    }
+</script>
+</body>
+</html>
             font-size: 14px; margin-top: 10px;
         }
     </style>
