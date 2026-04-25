@@ -3,127 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>محاكي الاحتمالات - النسخة النهائية</title>
+    <title>محاكي الاحتمالات - النسخة المصححة</title>
     <style>
-        :root {
-            --ink: #1a1a1a;
-            --paper: #f4f1e6;
-            --desk: #b08d6d;
-        }
-
-        /* الخلفية تغطي كامل الصفحة */
+        :root { --ink: #1a1a1a; --paper: #f4f1e6; --desk: #b08d6d; }
+        
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
             background: var(--desk) url('https://www.transparenttextures.com/patterns/wood-pattern.png');
-            background-size: cover; font-family: 'Cairo', sans-serif; overflow: hidden;
+            font-family: 'Cairo', sans-serif; overflow: hidden;
         }
 
         .main-scene {
             width: 100vw; height: 100vh;
             display: flex; justify-content: space-around; align-items: center;
-            position: relative;
+            position: relative; flex-wrap: wrap;
         }
 
-        /* الدفتر الظاهر دائماً */
+        /* دفتر الاحتمالات - ثابت وظاهر */
         .notebook {
-            width: 250px; height: 350px; background: var(--paper);
-            border: 5px solid var(--ink); padding: 15px;
-            box-shadow: 10px 10px 0px rgba(0,0,0,0.2);
-            cursor: pointer; position: relative;
+            width: 280px; background: var(--paper); border: 5px solid var(--ink);
+            padding: 20px; box-shadow: 10px 10px 0px rgba(0,0,0,0.2);
+            cursor: pointer; z-index: 10;
         }
 
         .chart-container {
             display: flex; justify-content: space-around; align-items: flex-end;
-            height: 120px; border-bottom: 4px solid var(--ink); margin-top: 20px;
+            height: 180px; border-bottom: 4px solid var(--ink); margin-top: 20px;
         }
 
-        .bar { width: 30px; border: 3px solid var(--ink); transition: height 0.6s ease; position: relative; }
-        .bar-label { position: absolute; bottom: -30px; width: 100%; text-align: center; font-weight: bold; }
+        /* الأعمدة وتفاعل الطول والقصر */
+        .bar { 
+            width: 35px; border: 3px solid var(--ink); 
+            transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1); 
+            position: relative; 
+        }
+        .bar-label { position: absolute; bottom: -35px; width: 100%; text-align: center; font-weight: bold; }
 
-        /* رزمة الورق الفخمة */
+        /* رزمة الورق */
         .deck {
-            width: 140px; height: 200px; 
+            width: 130px; height: 190px; 
             background: #a32a2a url('https://i.pinimg.com/736x/81/44/7e/81447e704040a4d805096f264870f07f.jpg') center/cover;
-            border: 5px solid var(--ink); border-radius: 10px;
+            border: 4px solid var(--ink); border-radius: 10px;
             cursor: pointer; box-shadow: 8px 8px 0px var(--ink);
-            transition: 0.2s;
         }
-        .deck:active { transform: translateY(5px); box-shadow: 2px 2px 0px var(--ink); }
 
-        /* السجل المفتوح */
-        .history-panel {
-            width: 200px; height: 350px; background: rgba(255,255,255,0.1);
+        /* السجل المطور - يظهر كل البطاقات */
+        .history-section {
+            width: 220px; height: 350px; background: rgba(255,255,255,0.15);
             border: 3px dashed var(--ink); border-radius: 10px;
-            padding: 10px; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 5px;
+            display: flex; flex-direction: column;
+        }
+        
+        .history-grid {
+            flex-grow: 1; overflow-y: auto; display: flex; flex-wrap: wrap; 
+            gap: 8px; padding: 10px; align-content: flex-start;
         }
 
         .mini-card {
             width: 45px; height: 65px; background: white; border: 2px solid var(--ink);
-            display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;
+            display: flex; align-items: center; justify-content: center; 
+            font-weight: bold; font-size: 14px; box-shadow: 2px 2px 0px rgba(0,0,0,0.1);
         }
 
-        /* نافذة الشرح التي تظهر عند الضغط */
-        .explanation-overlay {
+        /* شاشة عرض الكرت المسحوب */
+        .overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); display: none;
+            background: rgba(0,0,0,0.7); display: none;
             justify-content: center; align-items: center; z-index: 1000;
-        }
-
-        .exp-content {
-            width: 300px; background: var(--paper); border: 6px solid var(--ink);
-            padding: 20px; text-align: center; box-shadow: 15px 15px 0px #333;
-        }
-
-        /* الكرت المسحوب المثبت */
-        .card-view {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); display: none;
-            justify-content: center; align-items: center; z-index: 500;
         }
 
         .active-card {
             width: 200px; height: 300px; background: white;
             border: 8px solid var(--ink); border-radius: 15px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            font-size: 70px; font-weight: bold;
+            font-size: 70px; font-weight: bold; transform: scale(1.1);
         }
     </style>
 </head>
 <body>
 
 <div class="main-scene">
-    <div class="notebook" onclick="showExp()">
-        <h3 style="text-align:center; margin:0;">📊 الاحتمالات</h3>
-        <p style="font-size:11px; text-align:center;">(اضغط للشرح العلمي)</p>
+    <div class="notebook" onclick="alert('الشرح العلمي: عند سحب كرت، تقل نسبته وتتوزع الفرصة الضائعة على الأنواع الأخرى بالتساوي، لذا تطول أعمدتها.')">
+        <h3 style="text-align:center; margin:0;">📊 دفتر الاحتمالات</h3>
         <div class="chart-container">
             <div class="bar" id="bar-H" style="height:25%; background:#d14949;"><div class="bar-label">♥</div></div>
             <div class="bar" id="bar-S" style="height:25%; background:#333;"><div class="bar-label">♠</div></div>
             <div class="bar" id="bar-D" style="height:25%; background:#d14949;"><div class="bar-label">♦</div></div>
             <div class="bar" id="bar-C" style="height:25%; background:#333;"><div class="bar-label">♣</div></div>
         </div>
-        <div id="prob-vals" style="display:flex; justify-content: space-around; margin-top:35px; font-weight:bold; font-size:14px;">
+        <div id="perc-labels" style="display:flex; justify-content: space-around; margin-top:40px; font-weight:bold;">
             <span>25%</span><span>25%</span><span>25%</span><span>25%</span>
         </div>
     </div>
 
     <div class="deck" onclick="drawCard()"></div>
 
-    <div class="history-panel" id="history">
-        <p style="width:100%; text-align:center; font-weight:bold; margin:0;">📜 السجل</p>
+    <div class="history-section">
+        <p style="text-align:center; font-weight:bold; margin: 10px 0;">📜 سجل البطاقات</p>
+        <div class="history-grid" id="historyGrid">
+            </div>
     </div>
 </div>
 
-<div class="card-view" id="cardOverlay" onclick="this.style.display='none'">
-    <div id="mainCard" class="active-card"></div>
-    <p style="position:absolute; bottom:15%; color:white;">انقر في أي مكان للمتابعة...</p>
-</div>
-
-<div class="explanation-overlay" id="expOverlay" onclick="this.style.display='none'">
-    <div class="exp-content">
-        <h3>🔍 لماذا تغيرت الأعمدة؟</h3>
-        <p id="expText">عند سحب بطاقة، يقل عدد البطاقات من هذا النوع، مما يجعل احتمالية ظهوره مرة أخرى أقل (يقصر العمود)، بينما تزيد فرصة الأنواع الأخرى تلقائياً (تطول الأعمدة).</p>
-        <button style="background:var(--ink); color:white; border:none; padding:10px 20px; cursor:pointer;">فهمت!</button>
-    </div>
+<div id="cardOverlay" class="overlay" onclick="this.style.display='none'">
+    <div id="displayCard" class="active-card"></div>
+    <p style="position:absolute; bottom:15%; color:white;">انقر في أي مكان للإغلاق</p>
 </div>
 
 <script>
@@ -132,121 +116,51 @@
 
     function drawCard() {
         let suits = Object.keys(counts).filter(s => counts[s] > 0);
-        if (suits.length === 0) return;
+        if (suits.length === 0) return alert("انتهت البطاقات!");
 
         let s = suits[Math.floor(Math.random() * suits.length)];
         let v = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'][Math.floor(Math.random() * 13)];
         
         counts[s]--;
         
-        // عرض الكرت
+        // 1. عرض الكرت الكبير
         const overlay = document.getElementById('cardOverlay');
-        const cardDiv = document.getElementById('mainCard');
-        cardDiv.innerHTML = v + "<br>" + symbols[s];
-        cardDiv.style.color = (s=='H'||s=='D') ? '#d14949' : '#1a1a1a';
+        const display = document.getElementById('displayCard');
+        display.innerHTML = v + "<br>" + symbols[s];
+        display.style.color = (s=='H'||s=='D') ? '#d14949' : '#1a1a1a';
         overlay.style.display = 'flex';
 
-        // إضافة للسجل
-        const hist = document.getElementById('history');
+        // 2. تحديث السجل فوراً (إضافة البطاقة الجديدة للشبكة)
+        const grid = document.getElementById('historyGrid');
         const mini = document.createElement('div');
         mini.className = 'mini-card';
-        mini.style.color = cardDiv.style.color;
+        mini.style.color = display.style.color;
         mini.innerHTML = v + symbols[s];
-        hist.appendChild(mini);
+        grid.appendChild(mini);
+        grid.scrollTop = grid.scrollHeight; // التمرير لآخر بطاقة تلقائياً
 
-        updateUI();
+        updateProbabilities();
     }
 
-    function updateUI() {
+    function updateProbabilities() {
         let total = Object.values(counts).reduce((a, b) => a + b, 0);
-        let txt = "";
+        let htmlLabels = "";
+        
         for (let s in counts) {
+            // حساب الاحتمالية: (عدد النوع المتبقي / المجموع الكلي) * 100
             let p = total > 0 ? (counts[s] / total * 100) : 0;
+            
+            // تحديث طول العمود
             document.getElementById(`bar-${s}`).style.height = p + "%";
-            txt += `<span>${Math.round(p)}%</span>`;
+            htmlLabels += `<span>${Math.round(p)}%</span>`;
         }
-        document.getElementById('prob-vals').innerHTML = txt;
-    }
-
-    function showExp() {
-        document.getElementById('expOverlay').style.display = 'flex';
+        document.getElementById('perc-labels').innerHTML = htmlLabels;
     }
 </script>
 
 </body>
 </html>
-            <div class="bar" id="bar-D" style="height:25%; background:#d14949;"><div class="bar-label">♦</div></div>
-            <div class="bar" id="bar-C" style="height:25%; background:#333;"><div class="bar-label">♣</div></div>
-        </div>
-        <div id="prob-text" style="display:flex; justify-content: space-around; font-size:12px; margin-top:25px; font-weight:bold;">
-            <span>25%</span><span>25%</span><span>25%</span><span>25%</span>
-        </div>
-    </div>
-
-    <div class="card-view" onclick="this.querySelector('.active-card').style.display='none'">
-        <div id="mainCard" class="active-card"></div>
-    </div>
-
-    <div class="controls">
-        <div class="history-box" id="history"><b>السجل:</b><br></div>
-        <div class="deck" onclick="drawCard()">♠</div>
-    </div>
-</div>
-
-<script>
-    let counts = { 'H': 13, 'S': 13, 'D': 13, 'C': 13 };
-    let symbols = { 'H': '♥', 'S': '♠', 'D': '♦', 'C': '♣' };
-
-    function drawCard() {
-        let suits = Object.keys(counts).filter(s => counts[s] > 0);
-        if (suits.length === 0) return;
-
-        let s = suits[Math.floor(Math.random() * suits.length)];
-        let v = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'][Math.floor(Math.random() * 13)];
-        
-        counts[s]--;
-        
-        const cardDiv = document.getElementById('mainCard');
-        cardDiv.innerHTML = v + "<br>" + symbols[s];
-        cardDiv.style.color = (s=='H'||s=='D') ? '#d14949' : '#1a1a1a';
-        cardDiv.style.display = 'flex';
-
-        updateUI();
-        document.getElementById('history').innerHTML += (v + symbols[s] + " ");
-    }
-
-    function updateUI() {
-        let total = Object.values(counts).reduce((a, b) => a + b, 0);
-        let txt = "";
-        for (let s in counts) {
-            let p = total > 0 ? (counts[s] / total * 100) : 0;
-            document.getElementById(`bar-${s}`).style.height = p + "%";
-            txt += `<span>${Math.round(p)}%</span>`;
-        }
-        document.getElementById('prob-text').innerHTML = txt;
-    }
-</script>
-
-</body>
-</html>
-font-size: 14px; text-align:center;">اضغط لمشاهدة التفاصيل</p>
-        </div>
-
-        <div class="deck" onclick="drawCard()"></div>
-
-        <div style="position: absolute; left: 5%; bottom: 20%; cursor:pointer;" onclick="openScreen('historyScreen')">
-            <div style="width:110px; height:150px; background:#fff; border:5px solid var(--ink); transform: rotate(-10deg);"></div>
-            <p style="text-align:center; font-weight:bold;">سجل السحب</p>
-        </div>
-
-        <div id="flyingCard" class="flying-card"></div>
-    </div>
-
-    <div id="notebookScreen" class="overlay-screen">
-        <div class="notebook-full">
-            <h1 style="text-align:center;">تحليل الاحتمالات البصري</h1>
-            <div class="chart-container">
-                <div class="bar" id="bar-H" style="height:25%; background:#d14949;"><div class="bar-label">♥</div></div>
+lass="bar" id="bar-H" style="height:25%; background:#d14949;"><div class="bar-label">♥</div></div>
                 <div class="bar" id="bar-S" style="height:25%; background:#333;"><div class="bar-label">♠</div></div>
                 <div class="bar" id="bar-D" style="height:25%; background:#d14949;"><div class="bar-label">♦</div></div>
                 <div class="bar" id="bar-C" style="height:25%; background:#333;"><div class="bar-label">♣</div></div>
