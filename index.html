@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>محاكي الاحتمالات - النسخة المصححة</title>
+    <title>محاكي الاحتمالات - نظام الشرح المطور</title>
     <style>
         :root { --ink: #1a1a1a; --paper: #f4f1e6; --desk: #b08d6d; }
         
@@ -19,7 +19,7 @@
             position: relative; flex-wrap: wrap;
         }
 
-        /* دفتر الاحتمالات - ثابت وظاهر */
+        /* دفتر الاحتمالات */
         .notebook {
             width: 280px; background: var(--paper); border: 5px solid var(--ink);
             padding: 20px; box-shadow: 10px 10px 0px rgba(0,0,0,0.2);
@@ -31,7 +31,6 @@
             height: 180px; border-bottom: 4px solid var(--ink); margin-top: 20px;
         }
 
-        /* الأعمدة وتفاعل الطول والقصر */
         .bar { 
             width: 35px; border: 3px solid var(--ink); 
             transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1); 
@@ -47,7 +46,7 @@
             cursor: pointer; box-shadow: 8px 8px 0px var(--ink);
         }
 
-        /* السجل المطور - يظهر كل البطاقات */
+        /* السجل المطور */
         .history-section {
             width: 220px; height: 350px; background: rgba(255,255,255,0.15);
             border: 3px dashed var(--ink); border-radius: 10px;
@@ -65,8 +64,118 @@
             font-weight: bold; font-size: 14px; box-shadow: 2px 2px 0px rgba(0,0,0,0.1);
         }
 
-        /* شاشة عرض الكرت المسحوب */
+        /* الشاشات المنبثقة (Overlay) */
         .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); display: none;
+            justify-content: center; align-items: center; z-index: 1000;
+        }
+
+        /* تصميم الكرت المسحوب والكبير */
+        .active-card {
+            width: 200px; height: 300px; background: white;
+            border: 8px solid var(--ink); border-radius: 15px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-size: 70px; font-weight: bold; transform: scale(1.1);
+        }
+
+        /* تصميم صندوق الشرح (كان نافذة سابقة) */
+        .explanation-box {
+            width: 320px; background: var(--paper); border: 8px solid var(--ink);
+            padding: 25px; text-align: center; box-shadow: 15px 15px 0px rgba(0,0,0,0.4);
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-scene">
+    <div class="notebook" onclick="showExplanation()">
+        <h3 style="text-align:center; margin:0;">📊 دفتر الاحتمالات</h3>
+        <div class="chart-container">
+            <div class="bar" id="bar-H" style="height:25%; background:#d14949;"><div class="bar-label">♥</div></div>
+            <div class="bar" id="bar-S" style="height:25%; background:#333;"><div class="bar-label">♠</div></div>
+            <div class="bar" id="bar-D" style="height:25%; background:#d14949;"><div class="bar-label">♦</div></div>
+            <div class="bar" id="bar-C" style="height:25%; background:#333;"><div class="bar-label">♣</div></div>
+        </div>
+        <div id="perc-labels" style="display:flex; justify-content: space-around; margin-top:40px; font-weight:bold;">
+            <span>25%</span><span>25%</span><span>25%</span><span>25%</span>
+        </div>
+    </div>
+
+    <div class="deck" onclick="drawCard()"></div>
+
+    <div class="history-section">
+        <p style="text-align:center; font-weight:bold; margin: 10px 0;">📜 سجل البطاقات</p>
+        <div class="history-grid" id="historyGrid">
+            </div>
+    </div>
+</div>
+
+<div id="cardOverlay" class="overlay" onclick="this.style.display='none'">
+    <div id="displayCard" class="active-card"></div>
+</div>
+
+<div id="explanationOverlay" class="overlay" onclick="this.style.display='none'">
+    <div class="explanation-box">
+        <h3>🔍 لماذا تغيرت الأعمدة؟</h3>
+        <p style="text-align:right;">عند سحب بطاقة، يقل عدد البطاقات من هذا النوع المتبقي في المجموعة (المقام)، مما يجعل فرصة سحبه مرة أخرى أقل، لذلك يقصر العمود الخاص به.</p>
+        <p style="text-align:right;">في الوقت نفسه، تزيد فرصة سحب الأنواع الأخرى لأن نسبتها من إجمالي البطاقات المتبقية تصبح أكبر، لذلك تطول أعمدتها.</p>
+        <p style="font-weight:bold; color:#d35400;">(انقر في أي مكان للإغلاق)</p>
+    </div>
+</div>
+
+<script>
+    let counts = { 'H': 13, 'S': 13, 'D': 13, 'C': 13 };
+    let symbols = { 'H': '♥', 'S': '♠', 'D': '♦', 'C': '♣' };
+
+    function drawCard() {
+        let suits = Object.keys(counts).filter(s => counts[s] > 0);
+        if (suits.length === 0) return;
+
+        let s = suits[Math.floor(Math.random() * suits.length)];
+        let v = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'][Math.floor(Math.random() * 13)];
+        
+        counts[s]--;
+        
+        // عرض الكرت الكبير
+        const overlay = document.getElementById('cardOverlay');
+        const display = document.getElementById('displayCard');
+        display.innerHTML = v + "<br>" + symbols[s];
+        display.style.color = (s=='H'||s=='D') ? '#d14949' : '#1a1a1a';
+        overlay.style.display = 'flex';
+
+        // تحديث السجل فوراً
+        const grid = document.getElementById('historyGrid');
+        const mini = document.createElement('div');
+        mini.className = 'mini-card';
+        mini.style.color = display.style.color;
+        mini.innerHTML = v + symbols[s];
+        grid.appendChild(mini);
+        grid.scrollTop = grid.scrollHeight; 
+
+        updateProbabilities();
+    }
+
+    function updateProbabilities() {
+        let total = Object.values(counts).reduce((a, b) => a + b, 0);
+        let htmlLabels = "";
+        
+        for (let s in counts) {
+            let p = total > 0 ? (counts[s] / total * 100) : 0;
+            document.getElementById(`bar-${s}`).style.height = p + "%";
+            htmlLabels += `<span>${Math.round(p)}%</span>`;
+        }
+        document.getElementById('perc-labels').innerHTML = htmlLabels;
+    }
+
+    // وظيفة إظهار الشرح كما كانت في المرة السابقة
+    function showExplanation() {
+        document.getElementById('explanationOverlay').style.display = 'flex';
+    }
+</script>
+
+</body>
+</html>
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.7); display: none;
             justify-content: center; align-items: center; z-index: 1000;
