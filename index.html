@@ -7,66 +7,194 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --ink: #1a1a1a; 
-            --paper: #f4f1e6; 
-            --desk: #4B6375; 
-            --accent: #B4666F; 
-            --dark-red: #8B0000; /* اللون الأحمر الغامق الجديد */
-            --gold: #f1c40f; 
-            --success: #27ae60; 
+            --ink: #1a1a1a; --paper: #f4f1e6; --desk: #4B6375; --accent: #B4666F; 
+            --dark-faded-red: #8B4513; /* أحمر غامق باهت */
+            --gold: #f1c40f; --success: #27ae60; 
         }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Cairo', sans-serif; overflow: hidden; background: var(--desk); }
-        
-        .screen { 
-            position: absolute; width: 100vw; height: 100vh; 
-            background: var(--desk);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 10;
-        }
-
+        .screen { position: absolute; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
         .hidden { display: none !important; }
-
-        .glass-box { 
-            background: var(--paper); border: 6px solid var(--ink); padding: 25px; 
-            text-align: center; box-shadow: 15px 15px 0px rgba(0,0,0,0.3); width: 90%; max-width: 600px;
-        }
-
+        .glass-box { background: var(--paper); border: 6px solid var(--ink); padding: 25px; text-align: center; box-shadow: 15px 15px 0px rgba(0,0,0,0.3); width: 90%; max-width: 600px; }
+        
+        /* الأوسمة */
         .badges-container { display: flex; justify-content: center; gap: 15px; margin: 15px 0; }
-        .badge { 
-            width: 60px; height: 60px; background: #bbb; border-radius: 50%; 
-            border: 3px solid var(--ink); display: flex; align-items: center; justify-content: center;
-            cursor: pointer; opacity: 0.5; filter: grayscale(1); transition: 0.3s;
-        }
+        .badge { width: 60px; height: 60px; background: #bbb; border-radius: 50%; border: 3px solid var(--ink); display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0.5; filter: grayscale(1); transition: 0.3s; }
         .badge.unlocked { opacity: 1; filter: grayscale(0); background: var(--gold); border-color: var(--accent); transform: scale(1.1); }
 
-        .btn { 
-            background: var(--ink); color: white; border: none; padding: 12px 25px; 
-            font-size: 16px; cursor: pointer; margin: 5px; transition: 0.3s; font-family: 'Cairo';
-            border-radius: 4px;
-        }
+        .btn { background: var(--ink); color: white; border: none; padding: 12px 25px; font-size: 16px; cursor: pointer; margin: 5px; transition: 0.3s; font-family: 'Cairo'; border-radius: 4px; }
         .btn:hover:not(:disabled) { background: var(--accent); transform: translateY(-2px); }
         .btn:disabled { background: #888; cursor: not-allowed; }
 
-        .status-header {
-            background: var(--ink); color: white; padding: 8px 20px; border-radius: 30px;
-            margin-bottom: 15px; display: flex; gap: 25px; font-size: 14px;
-        }
-
+        .status-header { background: var(--ink); color: white; padding: 8px 20px; border-radius: 30px; margin-bottom: 15px; display: flex; gap: 25px; font-size: 14px; }
         .notebook { width: 280px; background: white; border: 4px solid var(--ink); padding: 15px; cursor: pointer; border-radius: 8px; }
         .chart-bar-container { display: flex; justify-content: space-around; align-items: flex-end; height: 120px; border-bottom: 2px solid var(--ink); margin-top: 10px; }
         .bar { width: 30px; transition: height 0.4s; border: 2px solid var(--ink); }
         
-        .deck { 
-            width: 120px; height: 170px; background: #a32a2a url('https://i.pinimg.com/736x/81/44/7e/81447e704040a4d805096f264870f07f.jpg') center/cover;
-            border: 4px solid var(--ink); border-radius: 10px; cursor: pointer; box-shadow: 8px 8px 0px var(--ink);
-            margin: 20px 0;
+        /* الكرت بخلفية */
+        .deck { width: 120px; height: 170px; background: #800000 url('https://i.pinimg.com/originals/81/44/7e/81447e704040a4d805096f264870f07f.png') center/cover; border: 4px solid var(--ink); border-radius: 10px; cursor: pointer; box-shadow: 8px 8px 0px var(--ink); margin: 20px 0; position: relative; }
+        .deck::after { content: "اسحب"; position: absolute; bottom: 10px; left: 0; width: 100%; color: white; font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px black; }
+
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .pop-card { background: white; padding: 30px; border: 6px solid var(--ink); width: 85%; max-width: 450px; text-align: center; border-radius: 12px; color: var(--ink); }
+        #help-icon { position: fixed; bottom: 20px; right: 20px; background: var(--paper); border: 3px solid var(--ink); width: 50px; height: 50px; border-radius: 50%; display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 100; font-weight: bold; font-size: 20px; color: var(--ink); }
+    </style>
+</head>
+<body>
+
+    <div id="help-icon" onclick="showMiniGuide()">؟</div>
+
+    <div id="screen-main" class="screen">
+        <div class="glass-box">
+            <h1 style="font-size: 60px; margin: 0; color: var(--accent);">PROBCARD</h1>
+            <p>مختبر استكشاف الاحتمالات</p>
+            <div class="badges-container">
+                <div id="badge-explorer" class="badge" onclick="alert('وسام المستكشف: يُمنح عند إنهاء أول وضع تعليمي.')">🧭</div>
+                <div id="badge-expert" class="badge" onclick="alert('وسام الخبير: يُمنح عند ختم جميع الدروس الأربعة.')">🎓</div>
+                <div id="badge-pro" class="badge" onclick="alert('وسام المحترف: يُمنح عند جمع 100 نقطة في التحدي.')">👑</div>
+            </div>
+            <button class="btn" onclick="toggleAbout(true)">عن اللعبة</button>
+            <button class="btn" style="background: var(--accent);" onclick="startFlow()">ابدأ اللعب</button>
+        </div>
+    </div>
+
+    <div id="overlay-about" class="overlay" onclick="toggleAbout(false)">
+        <div class="pop-card" onclick="event.stopPropagation()">
+            <h2 style="color: var(--accent);">حول اللعبة</h2>
+            <p style="text-align: right; font-size: 14px; line-height: 1.6;">رحلة تفاعلية لاستكشاف الاحتمالات باستخدام البطاقات. إعداد الطالبات: فرح الغامدي، ريم مقيبل، تالين الحازمي، عريب المولد، جيان حرقاني. بإشراف: زهرة الشمراني.</p>
+            <button class="btn" onclick="toggleAbout(false)">إغلاق</button>
+        </div>
+    </div>
+
+    <div id="screen-guide" class="screen hidden">
+        <div class="glass-box" style="text-align: right;">
+            <h2 style="text-align: center; color: var(--accent);">📖 دليل الكروت</h2>
+            <p>الرزمة (52 بطاقة):<br>
+            - <span style="color:var(--dark-faded-red)">♥ ♦</span> حمراء (26 كرت)<br>
+            - <span>♠ ♣</span> سوداء (26 كرت)<br>
+            - كل نوع (مثلاً ♥) فيه 13 بطاقة.</p>
+            <button class="btn" style="width: 100%; background: var(--accent);" onclick="goToModes()">فهمت، للانتقال للأوضاع</button>
+        </div>
+    </div>
+
+    <div id="screen-modes" class="screen hidden">
+        <div class="glass-box">
+            <h2 style="color: var(--accent);">الأوضاع التعليمية</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button class="btn" onclick="setupGame('independent')">مستقلة</button>
+                <button class="btn" onclick="setupGame('dependent')">غير مستقلة</button>
+                <button class="btn" onclick="setupGame('mutually')">متنافية</button>
+                <button class="btn" onclick="setupGame('non-mutually')">غير متنافية</button>
+            </div>
+            <hr style="margin:20px 0; opacity:0.2;">
+            <button id="btn-challenge" class="btn" style="width: 100%; background: #555;" disabled onclick="setupGame('challenge')">🔒 وضع التحدي</button>
+        </div>
+    </div>
+
+    <div id="screen-game" class="screen hidden">
+        <div class="status-header"><span id="mode-ui">-</span> <span id="score-ui">النقاط: 0</span></div>
+        <div class="notebook" onclick="showExplanation()">
+            <p style="font-size: 13px; font-weight: bold; text-align: center; margin:0;">📊 سجل البيانات</p>
+            <div class="chart-bar-container">
+                <div class="bar" id="b-H" style="background:var(--dark-faded-red);"></div>
+                <div class="bar" id="b-S" style="background:#333;"></div>
+                <div class="bar" id="b-D" style="background:var(--dark-faded-red);"></div>
+                <div class="bar" id="b-C" style="background:#333;"></div>
+            </div>
+            <p id="explain-hint" style="font-size: 10px; color: var(--accent); text-align: center; margin-top:5px;">(اضغط للشرح العلمي)</p>
+        </div>
+        <div class="deck" onclick="drawCard()"></div>
+        <div id="mission-box" style="width: 280px; background: white; padding: 10px; border: 2px dashed var(--ink); font-size: 13px; text-align: center; border-radius: 8px; color: var(--ink);">
+            <b>المهمة:</b> <span id="mission-text">اسحب كرتين لملاحظة الاحتمال</span>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button class="btn" onclick="backToModes()">🔙 عودة</button>
+            <button class="btn" style="background: var(--success);" onclick="showFinalQuestion()">سؤال الإتقان ➔</button>
+        </div>
+    </div>
+
+    <div id="overlay-pop" class="overlay"><div class="pop-card" id="pop-content"></div></div>
+
+    <script>
+        let currentMode = '', score = 0, totalCards = 52;
+        let cardCounts = { H: 13, S: 13, D: 13, C: 13 };
+        let completed = { independent: false, dependent: false, mutually: false, 'non-mutually': false };
+
+        function startFlow() { document.getElementById('screen-main').classList.add('hidden'); document.getElementById('screen-guide').classList.remove('hidden'); }
+        function goToModes() { document.getElementById('screen-guide').classList.add('hidden'); document.getElementById('screen-modes').classList.remove('hidden'); document.getElementById('help-icon').style.display='flex'; }
+        function toggleAbout(s) { document.getElementById('overlay-about').style.display = s?'flex':'none'; }
+        function backToModes() { document.getElementById('screen-game').classList.add('hidden'); document.getElementById('screen-modes').classList.remove('hidden'); }
+
+        function setupGame(m) {
+            currentMode = m; cardCounts = {H:13, S:13, D:13, C:13}; totalCards = 52;
+            document.getElementById('mode-ui').innerText = "الوضع: " + m;
+            const missions = {
+                independent: "اسحب كرتين حمراء (مع الإرجاع). ستلاحظ أن الاحتمال لا يتغير!",
+                dependent: "اسحب كرتين حمراء (بدون إرجاع). ستلاحظ نقص الاحتمال!",
+                mutually: "هل يمكن سحب كرت يكون (ملك) و(رقم 5) في وقت واحد؟ جرب السحب.",
+                'non-mutually': "اسحب كرت قد يكون (أحمر) و(ملك) في نفس الوقت."
+            };
+            document.getElementById('mission-text').innerText = missions[m] || "تحدي الاحتمالات!";
+            updateUI();
+            startSim();
         }
 
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); 
-                   display: none; align-items: center; justify-content: center; z-index: 1000; }
-        
-        .pop-card { background: white; padding: 30px; border: 6px solid var(--ink); width: 85%; max-width: 450px; text-align: center; border-radius: 12px; }
+        function startSim() { document.getElementById('screen-modes').classList.add('hidden'); document.getElementById('screen-game').classList.remove('hidden'); }
 
+        function drawCard() {
+            const suits = ['H', 'S', 'D', 'C'];
+            const s = suits[Math.floor(Math.random()*4)];
+            if(currentMode === 'dependent' || currentMode === 'challenge') {
+                if(cardCounts[s] > 0) { cardCounts[s]--; totalCards--; }
+            }
+            updateUI();
+        }
+
+        function updateUI() {
+            for(let s in cardCounts) {
+                let p = totalCards > 0 ? (cardCounts[s] / totalCards * 100) : 0;
+                document.getElementById('b-'+s).style.height = p + "%";
+            }
+            document.getElementById('score-ui').innerText = "النقاط: " + score;
+        }
+
+        function showExplanation() {
+            const pop = document.getElementById('overlay-pop');
+            pop.style.display = 'flex';
+            let txt = currentMode === 'independent' ? "الاحتمال ثابت (25%) لأن الكرت يعود للرزمة." : "الاحتمال يتغير لأن كل سحبة تقلل العدد الكلي للبطاقات.";
+            document.getElementById('pop-content').innerHTML = `<h3>🔍 الشرح العلمي</h3><p>${txt}</p><button class="btn" onclick="closePop()">فهمت</button>`;
+        }
+
+        function showFinalQuestion() {
+            const pop = document.getElementById('overlay-pop'); pop.style.display = 'flex';
+            document.getElementById('pop-content').innerHTML = `<h3>🎯 سؤال الإتقان</h3><p>ما احتمال سحب كرت 'قلب' ♥ من رزمة كاملة؟</p>
+                <button class="btn" onclick="finishMode(true)">13/52</button>
+                <button class="btn" onclick="finishMode(false)">1/52</button>`;
+        }
+
+        function finishMode(win) {
+            if(win) {
+                alert("أحسنتِ! تم ختم الوضع.");
+                completed[currentMode] = true;
+                document.getElementById('badge-explorer').classList.add('unlocked');
+                checkExpert();
+                backToModes();
+            } else alert("حاول مرة أخرى!");
+            closePop();
+        }
+
+        function checkExpert() {
+            if(Object.values(completed).every(v => v)) {
+                document.getElementById('badge-expert').classList.add('unlocked');
+                document.getElementById('btn-challenge').disabled = false;
+                document.getElementById('btn-challenge').style.background = 'var(--accent)';
+            }
+        }
+
+        function closePop() { document.getElementById('overlay-pop').style.display = 'none'; }
+        function showMiniGuide() { alert("الرزمة: 52 | كل نوع: 13 | الأحمر: 26"); }
+    </script>
+</body>
+</html>
         #help-icon { position: fixed; bottom: 20px; right: 20px; background: var(--paper); border: 3px solid var(--ink); 
                     width: 50px; height: 50px; border-radius: 50%; display: none; align-items: center; justify-content: center; 
                     cursor: pointer; z-index: 100; font-weight: bold; font-size: 20px; }
