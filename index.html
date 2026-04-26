@@ -11,6 +11,7 @@
             --paper: #f4f1e6; 
             --desk: #4B6375; 
             --accent: #B4666F; 
+            --dark-red: #8B0000; /* اللون الأحمر الغامق الجديد */
             --gold: #f1c40f; 
             --success: #27ae60; 
         }
@@ -20,11 +21,10 @@
             position: absolute; width: 100vw; height: 100vh; 
             background: var(--desk);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: opacity 0.5s ease, transform 0.5s ease;
             z-index: 10;
         }
 
-        .hidden { display: none !important; opacity: 0; pointer-events: none; }
+        .hidden { display: none !important; }
 
         .glass-box { 
             background: var(--paper); border: 6px solid var(--ink); padding: 25px; 
@@ -49,7 +49,7 @@
 
         .status-header {
             background: var(--ink); color: white; padding: 8px 20px; border-radius: 30px;
-            margin-bottom: 15px; display: flex; gap: 25px; font-size: 14px; box-shadow: 5px 5px 0px rgba(0,0,0,0.2);
+            margin-bottom: 15px; display: flex; gap: 25px; font-size: 14px;
         }
 
         .notebook { width: 280px; background: white; border: 4px solid var(--ink); padding: 15px; cursor: pointer; border-radius: 8px; }
@@ -69,7 +69,7 @@
 
         #help-icon { position: fixed; bottom: 20px; right: 20px; background: var(--paper); border: 3px solid var(--ink); 
                     width: 50px; height: 50px; border-radius: 50%; display: none; align-items: center; justify-content: center; 
-                    cursor: pointer; z-index: 100; font-weight: bold; font-size: 20px; box-shadow: 4px 4px 0px var(--ink); }
+                    cursor: pointer; z-index: 100; font-weight: bold; font-size: 20px; }
     </style>
 </head>
 <body>
@@ -88,14 +88,14 @@
             </div>
 
             <button class="btn" onclick="toggleAbout(true)">عن اللعبة</button>
-            <button class="btn" style="background: var(--accent);" onclick="goToGuide()">ابدأ اللعب</button>
+            <button class="btn" style="background: var(--accent);" onclick="startFlow()">ابدأ اللعب</button>
         </div>
     </div>
 
     <div id="overlay-about" class="overlay" onclick="toggleAbout(false)">
         <div class="pop-card" onclick="event.stopPropagation()">
             <h2 style="color: var(--accent);">حول اللعبة</h2>
-            <p style="text-align: right; font-size: 15px; line-height: 1.6;">
+            <p style="text-align: right; font-size: 15px;">
                 اللعبة عبارة عن رحلة تفاعلية لاستكشاف أنواع الحوادث والاحتمالات باستخدام بطاقات اللعب. 
                 الهدف: تبسيط فهم الاحتمالات المستقلة، وغير المستقلة، والمتنافية، وغير المتنافية بطريقة تفاعلية.
             </p>
@@ -112,11 +112,11 @@
             <h2 style="text-align: center; color: var(--accent);">📖 دليل الكروت الأساسي</h2>
             <p>رزمة الورق تتكون من <b>52 بطاقة</b> مقسمة كالآتي:</p>
             <ul style="line-height: 2;">
-                <li>4 أنواع: <span style="color:red">♥ ♦</span> (حمراء) و <span>♠ ♣</span> (سوداء).</li>
+                <li>4 أنواع: <span style="color:var(--dark-red)">♥ ♦</span> (حمراء) و <span>♠ ♣</span> (سوداء).</li>
                 <li>كل نوع به 13 بطاقة (من A إلى الملك).</li>
                 <li>المجموع: 26 كرت أحمر و 26 كرت أسود.</li>
             </ul>
-            <button class="btn" style="width: 100%; background: var(--accent); margin-top: 10px;" onclick="goToModes()">فهمت، للانتقال للأوضاع</button>
+            <button class="btn" style="width: 100%; background: var(--accent);" onclick="goToModes()">فهمت، للانتقال للأوضاع</button>
         </div>
     </div>
 
@@ -133,7 +133,7 @@
             <button id="btn-challenge" class="btn" style="width: 100%; background: #555;" disabled onclick="setupGame('challenge')">
                 🔒 وضع التحدي النهائي
             </button>
-            <p id="lock-hint" style="font-size: 12px; color: #d14949; margin-top: 10px; font-weight: bold;">أكمل الأوضاع التعليمية لفتح التحدي</p>
+            <p id="lock-hint" style="font-size: 12px; color: #d14949; margin-top: 10px;">أكمل الأوضاع التعليمية لفتح التحدي</p>
         </div>
     </div>
 
@@ -146,9 +146,9 @@
         <div class="notebook" onclick="showExplanation()">
             <p style="font-size: 14px; margin: 0; font-weight: bold; text-align: center;">📊 سجل الاحتمالات العلمي</p>
             <div class="chart-bar-container">
-                <div class="bar" id="b-H" style="height:25%; background:#d14949;"></div>
+                <div class="bar" id="b-H" style="height:25%; background:var(--dark-red);"></div>
                 <div class="bar" id="b-S" style="height:25%; background:#333;"></div>
-                <div class="bar" id="b-D" style="height:25%; background:#d14949;"></div>
+                <div class="bar" id="b-D" style="height:25%; background:var(--dark-red);"></div>
                 <div class="bar" id="b-C" style="height:25%; background:#333;"></div>
             </div>
             <div style="display:flex; justify-content:space-around; font-size:11px; font-weight:bold; margin-top:8px;">
@@ -183,7 +183,116 @@
         let cardCounts = { H: 13, S: 13, D: 13, C: 13 };
         let totalCards = 52;
 
-        // وظائف التنقل المصححة
+        // وظيفة "ابدأ اللعب" الرئيسية
+        function startFlow() {
+            document.getElementById('screen-main').classList.add('hidden');
+            document.getElementById('screen-guide').classList.remove('hidden');
+        }
+
+        function goToModes() {
+            document.getElementById('screen-guide').classList.add('hidden');
+            document.getElementById('screen-modes').classList.remove('hidden');
+            document.getElementById('help-icon').style.display = 'flex';
+        }
+
+        function toggleAbout(show) {
+            document.getElementById('overlay-about').style.display = show ? 'flex' : 'none';
+        }
+
+        function setupGame(mode) {
+            currentMode = mode;
+            cardCounts = { H: 13, S: 13, D: 13, C: 13 };
+            totalCards = 52;
+            document.getElementById('current-mode-name').innerText = "الوضع: " + getArName(mode);
+            updateUI();
+            showIntroQuestion(mode);
+        }
+
+        function getArName(m) {
+            const names = {independent:'مستقلة', dependent:'غير مستقلة', mutually:'متنافية', 'non-mutually':'غير متنافية', challenge:'التحدي'};
+            return names[m];
+        }
+
+        function showIntroQuestion(mode) {
+            const pop = document.getElementById('overlay-pop');
+            const cont = document.getElementById('pop-content');
+            pop.style.display = 'flex';
+
+            let q = mode === 'independent' ? "في الحوادث المستقلة، هل يتأثر احتمال السحبة الثانية بالأولى؟" : 
+                    mode === 'dependent' ? "في الحوادث غير المستقلة، ماذا يحدث للمجموع بعد سحب كرت دون إرجاعه؟" : "استعد لبدء المحاكاة!";
+            
+            cont.innerHTML = `<h3 style="color: var(--accent);">❓ سؤال تمهيدي</h3><p>${q}</p>
+                              <button class="btn" onclick="startSim()">ابدأ المحاكاة</button>`;
+        }
+
+        function startSim() {
+            document.getElementById('overlay-pop').style.display = 'none';
+            document.getElementById('screen-modes').classList.add('hidden');
+            document.getElementById('screen-game').classList.remove('hidden');
+        }
+
+        function drawCard() {
+            const suits = ['H', 'S', 'D', 'C'];
+            const s = suits[Math.floor(Math.random()*4)];
+            if(currentMode === 'dependent' || currentMode === 'challenge') {
+                if(cardCounts[s] > 0) { cardCounts[s]--; totalCards--; }
+            }
+            updateUI();
+            document.getElementById('game-msg').innerHTML = `تم سحب كرت: <b style="color:${(s=='H'||s=='D')?'var(--dark-red)':'#333'}">${s}</b><br>تأمل السجل البياني!`;
+        }
+
+        function updateUI() {
+            for(let s in cardCounts) {
+                let p = totalCards > 0 ? (cardCounts[s] / totalCards * 100) : 0;
+                document.getElementById('b-'+s).style.height = p + "%";
+            }
+            document.getElementById('count-ui').innerText = totalCards;
+            document.getElementById('score-display').innerText = "النقاط: " + score;
+        }
+
+        function showExplanation() {
+            const pop = document.getElementById('overlay-pop');
+            const cont = document.getElementById('pop-content');
+            pop.style.display = 'flex';
+            cont.innerHTML = `<h3 style="color: var(--accent);">🔍 الشرح العلمي</h3><p>الاحتمالات تتغير بناءً على عدد البطاقات المتبقية في الرزمة ونوع الحادثة.</p><button class="btn" onclick="closePop()">فهمت</button>`;
+        }
+
+        function showFinalQuestion() {
+            const pop = document.getElementById('overlay-pop');
+            const cont = document.getElementById('pop-content');
+            pop.style.display = 'flex';
+            cont.innerHTML = `<h3 style="color: var(--accent);">🎯 سؤال الإتقان</h3><p>ما احتمال سحب كرت أحمر من رزمة كاملة؟</p>
+                <button class="btn" onclick="handleFinal(true)">26/52</button>
+                <button class="btn" onclick="handleFinal(false)">13/52</button>`;
+        }
+
+        function handleFinal(correct) {
+            if(correct) {
+                alert("إجابة صحيحة!");
+                completedModes[currentMode] = true;
+                document.getElementById('badge-explorer').classList.add('unlocked');
+                backToModes();
+            } else { alert("حاول مرة أخرى!"); }
+            closePop();
+        }
+
+        function backToModes() {
+            document.getElementById('screen-game').classList.add('hidden');
+            document.getElementById('screen-modes').classList.remove('hidden');
+        }
+
+        function closePop() { document.getElementById('overlay-pop').style.display = 'none'; }
+
+        function showMiniGuide() {
+            const pop = document.getElementById('overlay-pop');
+            const cont = document.getElementById('pop-content');
+            pop.style.display = 'flex';
+            cont.innerHTML = `<h3 style="color: var(--accent);">📖 مرجع سريع</h3><p>المجموع: 52 | كل نوع: 13</p><button class="btn" onclick="closePop()">إغلاق</button>`;
+        }
+    </script>
+</body>
+</html>
+ف التنقل المصححة
         function goToGuide() {
             document.getElementById('screen-main').classList.add('hidden');
             document.getElementById('screen-guide').classList.remove('hidden');
