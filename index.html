@@ -3,70 +3,333 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>محاكي الاحتمالات التعليمي</title>
+    <title>PROBCARD - مختبر الاحتمالات</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --ink: #1a1a1a; --paper: #f4f1e6; --desk: #b08d6d; }
+        :root { --ink: #1a1a1a; --paper: #f4f1e6; --desk: #b08d6d; --accent: #d35400; --gold: #f1c40f; --success: #27ae60; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Cairo', sans-serif; overflow: hidden; background: #222; }
         
-        body, html { 
-            margin: 0; padding: 0; width: 100%; height: 100%; 
+        .screen { 
+            position: absolute; width: 100vw; height: 100vh; 
             background: var(--desk) url('https://www.transparenttextures.com/patterns/wood-pattern.png');
-            font-family: 'Cairo', sans-serif; overflow: hidden;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: 0.6s ease-in-out; z-index: 10;
         }
 
-        .main-scene {
-            width: 100vw; height: 100vh;
-            display: flex; justify-content: space-around; align-items: center;
-            position: relative; flex-wrap: wrap;
+        .hidden { display: none !important; }
+        .fade-out { transform: translateY(-100%); opacity: 0; }
+
+        /* اللوحات */
+        .glass-box { 
+            background: var(--paper); border: 6px solid var(--ink); padding: 25px; 
+            text-align: center; box-shadow: 15px 15px 0px rgba(0,0,0,0.3); width: 90%; max-width: 600px;
+            position: relative;
         }
 
-        /* دفتر الاحتمالات */
-        .notebook {
-            width: 300px; background: var(--paper); border: 5px solid var(--ink);
-            padding: 20px; box-shadow: 10px 10px 0px rgba(0,0,0,0.2);
-            cursor: pointer; text-align: center;
+        /* نظام الأوسمة */
+        .badges-container { display: flex; justify-content: center; gap: 15px; margin: 15px 0; }
+        .badge { 
+            width: 60px; height: 60px; background: #bbb; border-radius: 50%; 
+            border: 3px solid var(--ink); display: flex; align-items: center; justify-content: center;
+            cursor: pointer; opacity: 0.5; filter: grayscale(1); transition: 0.3s;
         }
+        .badge.unlocked { opacity: 1; filter: grayscale(0); background: var(--gold); border-color: var(--accent); transform: scale(1.1); }
 
-        .chart-container {
-            display: flex; justify-content: space-around; align-items: flex-end;
-            height: 180px; border-bottom: 4px solid var(--ink); margin-top: 20px;
+        /* الأزرار */
+        .btn { 
+            background: var(--ink); color: white; border: none; padding: 10px 20px; 
+            font-size: 16px; cursor: pointer; margin: 5px; transition: 0.3s; font-family: 'Cairo';
         }
+        .btn:hover:not(:disabled) { background: var(--accent); transform: translateY(-2px); }
+        .btn:disabled { background: #888; cursor: not-allowed; }
 
-        .bar { 
-            width: 35px; border: 3px solid var(--ink); 
-            transition: height 0.5s ease-out; 
-            position: relative; 
-        }
-        .bar-label { position: absolute; bottom: -35px; width: 100%; text-align: center; font-weight: bold; }
-
-        /* رزمة الورق */
-        .deck {
-            width: 130px; height: 190px; 
-            background: #a32a2a url('https://i.pinimg.com/736x/81/44/7e/81447e704040a4d805096f264870f07f.jpg') center/cover;
-            border: 4px solid var(--ink); border-radius: 10px;
-            cursor: pointer; box-shadow: 8px 8px 0px var(--ink);
-        }
-
-        /* سجل البطاقات */
-        .history-section {
-            width: 220px; height: 350px; background: rgba(255,255,255,0.15);
-            border: 3px dashed var(--ink); border-radius: 10px;
-            display: flex; flex-direction: column;
-        }
+        /* طاولة اللعب */
+        .game-table { display: flex; justify-content: space-around; width: 100%; align-items: center; flex-wrap: wrap; }
+        .notebook { width: 260px; background: white; border: 4px solid var(--ink); padding: 15px; cursor: pointer; }
+        .chart-bar-container { display: flex; justify-content: space-around; align-items: flex-end; height: 120px; border-bottom: 2px solid var(--ink); }
+        .bar { width: 25px; transition: height 0.4s; border: 2px solid var(--ink); }
         
-        .history-grid {
-            flex-grow: 1; overflow-y: auto; display: flex; flex-wrap: wrap; 
-            gap: 8px; padding: 10px; align-content: flex-start;
+        .deck { 
+            width: 110px; height: 160px; background: #a32a2a url('https://i.pinimg.com/736x/81/44/7e/81447e704040a4d805096f264870f07f.jpg') center/cover;
+            border: 4px solid var(--ink); border-radius: 8px; cursor: pointer; box-shadow: 5px 5px 0px var(--ink);
         }
 
-        .mini-card {
-            width: 45px; height: 65px; background: white; border: 2px solid var(--ink);
-            display: flex; align-items: center; justify-content: center; font-weight: bold;
+        /* شريط المعلومات العلوي */
+        .top-bar { 
+            position: fixed; top: 0; width: 100%; background: var(--ink); color: white; 
+            padding: 10px; display: flex; justify-content: space-between; z-index: 100; font-weight: bold;
         }
 
-        /* النوافذ المنبثقة */
-        .overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.75); display: none;
+        /* النوافذ */
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); 
+                   display: none; align-items: center; justify-content: center; z-index: 1000; color: var(--ink); }
+        
+        .question-card { background: white; padding: 30px; border: 5px solid var(--ink); width: 80%; max-width: 450px; text-align: center; }
+
+        /* أيقونة المساعدة الثابتة */
+        #help-icon { position: fixed; bottom: 20px; right: 20px; background: var(--paper); border: 3px solid var(--ink); 
+                    width: 45px; height: 45px; border-radius: 50%; display: none; align-items: center; justify-content: center; 
+                    cursor: pointer; z-index: 100; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div id="status-bar" class="top-bar hidden">
+        <div id="current-mode-name">الوضع: غير محدد</div>
+        <div id="score-display">النقاط: 0</div>
+    </div>
+
+    <div id="help-icon" onclick="showMiniGuide()">؟</div>
+
+    <div id="screen-main" class="screen">
+        <div class="glass-box">
+            <h1 style="font-size: 55px; margin: 0; color: var(--accent);">PROBCARD</h1>
+            <p>رحلة تفاعلية في عالم الاحتمالات</p>
+            
+            <div class="badges-container">
+                <div id="badge-explorer" class="badge" onclick="alert('وسام المستكشف: أنهِ وضعاً تعليمياً واحداً.')">🧭</div>
+                <div id="badge-expert" class="badge" onclick="alert('وسام الخبير: أنهِ جميع الأوضاع التعليمية.')">🎓</div>
+                <div id="badge-pro" class="badge" onclick="alert('وسام المحترف: اجمع 100 نقطة في التحدي.')">👑</div>
+            </div>
+
+            <button class="btn" onclick="toggleAbout(true)">عن اللعبة</button>
+            <button class="btn" style="background: var(--accent);" onclick="changeScreen('screen-main', 'screen-guide')">ابدأ اللعب</button>
+        </div>
+    </div>
+
+    <div id="overlay-about" class="overlay" onclick="toggleAbout(false)">
+        <div class="glass-box" onclick="event.stopPropagation()">
+            <h2>حول اللعبة</h2>
+            <p style="text-align: right; font-size: 14px;">
+                اللعبة عبارة عن رحلة تفاعلية لاستكشاف أنواع الحوادث والاحتمالات باستخدام بطاقات اللعب. 
+                الهدف: تبسيط فهم الاحتمالات المستقلة، وغير المستقلة، والمتنافية، وغير المتنافية بطريقة تفاعلية.
+            </p>
+            <p style="font-weight: bold; margin-bottom: 5px;">إعداد الطالبات:</p>
+            <p style="font-size: 13px; color: var(--accent); margin: 0;">فرح الغامدي، ريم مقيبل، تالين الحازمي، عريب المولد، جيان حرقاني</p>
+            <p style="margin: 5px 0;">ثاني/١ موهبة</p>
+            <p style="border-top: 1px solid #ccc; padding-top: 10px;">بإشراف المعلمة: زهرة الشمراني</p>
+            <button class="btn" onclick="toggleAbout(false)">إغلاق</button>
+        </div>
+    </div>
+
+    <div id="screen-guide" class="screen hidden">
+        <div class="glass-box" style="text-align: right;">
+            <h2 style="text-align: center;">📖 دليل الكروت الأساسي</h2>
+            <p>رزمة الورق تتكون من <b>52 بطاقة</b> مقسمة كالآتي:</p>
+            <ul>
+                <li>4 أنواع: <span style="color:red">♥ ♦</span> (حمراء) و <span>♠ ♣</span> (سوداء).</li>
+                <li>كل نوع به 13 بطاقة (من A إلى الملك).</li>
+                <li>المجموع: 26 كرت أحمر و 26 كرت أسود.</li>
+            </ul>
+            <p><b>تذكر:</b> المستقلة تعني "إرجاع الكرت"، غير المستقلة تعني "سحب بدون إرجاع".</p>
+            <button class="btn" style="width: 100%;" onclick="changeScreen('screen-guide', 'screen-modes')">فهمت، للانتقال للأوضاع</button>
+        </div>
+    </div>
+
+    <div id="screen-modes" class="screen hidden">
+        <div class="glass-box">
+            <h2>اختر مسارك التعليمي</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button class="btn" onclick="setupGame('independent')">مستقلة</button>
+                <button class="btn" onclick="setupGame('dependent')">غير مستقلة</button>
+                <button class="btn" onclick="setupGame('mutually')">متنافية</button>
+                <button class="btn" onclick="setupGame('non-mutually')">غير متنافية</button>
+            </div>
+            <hr>
+            <button id="btn-challenge" class="btn" style="width: 100%; background: #555;" disabled onclick="setupGame('challenge')">
+                🔒 وضع التحدي النهائي
+            </button>
+            <p id="lock-hint" style="font-size: 11px; color: red;">أكمل الأوضاع التعليمية لفتح التحدي</p>
+        </div>
+    </div>
+
+    <div id="screen-game" class="screen hidden">
+        <div class="game-table">
+            <div class="notebook" id="notebook-logic" onclick="showExplanation()">
+                <p style="font-size: 12px; margin: 0;">📊 دفتر الاحتمالات</p>
+                <p id="explain-hint" style="font-size: 9px; color: #777;">(اضغط للشرح العلمي)</p>
+                <div class="chart-bar-container" id="bar-wrap">
+                    <div class="bar" id="b-H" style="height:25%; background:red;"></div>
+                    <div class="bar" id="b-S" style="height:25%; background:#333;"></div>
+                    <div class="bar" id="b-D" style="height:25%; background:red;"></div>
+                    <div class="bar" id="b-C" style="height:25%; background:#333;"></div>
+                </div>
+                <div id="perc-vals" style="display:flex; justify-content:space-around; font-size:10px; font-weight:bold; margin-top:5px;">
+                    <span>25%</span><span>25%</span><span>25%</span><span>25%</span>
+                </div>
+                <div style="margin-top:10px; font-size:11px; border-top:1px solid #ddd;">
+                    المتبقي: <span id="count-ui">52</span> كرت
+                </div>
+            </div>
+
+            <div class="deck" onclick="drawLogic()"></div>
+
+            <div id="game-msg" style="width: 200px; background: rgba(255,255,255,0.8); padding: 10px; border: 2px dashed #000; font-size: 13px;">
+                اسحب كرتين لتلاحظ كيف يتأثر الاحتمال..
+            </div>
+        </div>
+        <button class="btn" style="margin-top: 30px; background: var(--success);" onclick="showFinalQuestion()">انتقل لسؤال الإتقان ➔</button>
+    </div>
+
+    <div id="overlay-question" class="overlay">
+        <div class="question-card" id="q-content">
+            </div>
+    </div>
+
+    <script>
+        // المتغيرات العالمية
+        let currentMode = '';
+        let score = 0;
+        let completed = { independent: false, dependent: false, mutually: false, 'non-mutually': false };
+        let cardCounts = { H: 13, S: 13, D: 13, C: 13 };
+        let totalCards = 52;
+
+        // وظائف التنقل
+        function changeScreen(from, to) {
+            document.getElementById(from).classList.add('fade-out');
+            setTimeout(() => {
+                document.getElementById(from).classList.add('hidden');
+                document.getElementById(to).classList.remove('hidden');
+                if(to === 'screen-game' || to === 'screen-modes') document.getElementById('status-bar').classList.remove('hidden');
+            }, 600);
+        }
+
+        function toggleAbout(show) { document.getElementById('overlay-about').style.display = show ? 'flex' : 'none'; }
+
+        // إعداد اللعبة
+        function setupGame(mode) {
+            currentMode = mode;
+            cardCounts = { H: 13, S: 13, D: 13, C: 13 };
+            totalCards = 52;
+            updateUI();
+            
+            document.getElementById('current-mode-name').innerText = "الوضع: " + getArName(mode);
+            document.getElementById('help-icon').style.display = 'flex';
+
+            // سؤال تمهيدي قبل الدخول للطاولة
+            showIntroQuestion(mode);
+        }
+
+        function getArName(m) {
+            const names = {independent:'مستقلة', dependent:'غير مستقلة', mutually:'متنافية', 'non-mutually':'غير متنافية', challenge:'التحدي'};
+            return names[m];
+        }
+
+        // الأسئلة التمهيدية
+        function showIntroQuestion(mode) {
+            const qOverlay = document.getElementById('overlay-question');
+            const qContent = document.getElementById('q-content');
+            qOverlay.style.display = 'flex';
+
+            let qText = "";
+            let options = [];
+            
+            if(mode === 'independent') {
+                qText = "ما هو التعريف الأنسب للحوادث المستقلة؟";
+                options = ["تأثر الحادثة الثانية بالأولى", "عدم تأثر الحادثة الثانية بالأولى", "وقوع حادثتين في نفس الوقت", "استحالة وقوع الحادثتين"];
+            } else if(mode === 'dependent') {
+                qText = "في الحوادث غير المستقلة، ماذا يحدث للمقام (المجموع) بعد السحب؟";
+                options = ["يبقى ثابتاً", "ينقص بمقدار واحد", "يزداد", "يصبح صفراً"];
+            } else {
+                qText = "جاهز لبدء محاكاة " + getArName(mode) + "؟";
+                options = ["نعم، لننطلق"];
+            }
+
+            qContent.innerHTML = `<h3>❓ سؤال تمهيدي</h3><p>${qText}</p>`;
+            options.forEach((opt, index) => {
+                qContent.innerHTML += `<button class="btn" onclick="finishIntroQ(${index === 1 || options.length === 1})">${opt}</button>`;
+            });
+        }
+
+        function finishIntroQ(isCorrect) {
+            if(!isCorrect && currentMode !== 'mutually') alert("حاول مرة أخرى، اقرأ الدليل جيداً!");
+            else {
+                document.getElementById('overlay-question').style.display = 'none';
+                changeScreen('screen-modes', 'screen-game');
+            }
+        }
+
+        // منطق السحب والمحاكاة
+        function drawLogic() {
+            let suits = ['H', 'S', 'D', 'C'];
+            let s = suits[Math.floor(Math.random()*4)];
+            
+            if(currentMode === 'dependent' || currentMode === 'challenge') {
+                if(cardCounts[s] > 0) {
+                    cardCounts[s]--;
+                    totalCards--;
+                }
+            }
+            // في المستقلة لا نغير القيم (محاكاة الإرجاع)
+            
+            updateUI();
+        }
+
+        function updateUI() {
+            for(let s in cardCounts) {
+                let p = (cardCounts[s] / totalCards) * 100;
+                document.getElementById('b-'+s).style.height = p + "%";
+            }
+            document.getElementById('count-ui').innerText = totalCards;
+            document.getElementById('score-display').innerText = "النقاط: " + score;
+            
+            // التحكم في زر الشرح
+            document.getElementById('explain-hint').style.display = (currentMode === 'challenge') ? 'none' : 'block';
+        }
+
+        function showExplanation() {
+            if(currentMode === 'challenge') return;
+            alert("الشرح: في وضع " + getArName(currentMode) + "، نلاحظ أن الاحتمالات " + (currentMode === 'independent' ? "ثابتة لأننا نعيد الكرت" : "تتغير لأن المجموع ينقص") + ".");
+        }
+
+        // سؤال الإتقان (نهاية الوضع)
+        function showFinalQuestion() {
+            const qOverlay = document.getElementById('overlay-question');
+            const qContent = document.getElementById('q-content');
+            qOverlay.style.display = 'flex';
+
+            qContent.innerHTML = `<h3>🎯 سؤال الإتقان</h3>
+                                  <p>إذا كان لدينا 52 كرت، ما احتمال سحب كرت من نوع 'القلوب' ♥؟</p>
+                                  <button class="btn" onclick="handleMastery(false)">1/4</button>
+                                  <button class="btn" onclick="handleMastery(true)">13/52</button>
+                                  <button class="btn" onclick="handleMastery(false)">1/52</button>`;
+        }
+
+        function handleMastery(isCorrect) {
+            if(isCorrect) {
+                alert("رائع! لقد أتقنت هذا الوضع.");
+                completed[currentMode] = true;
+                unlockBadge('explorer');
+                
+                // تحقق من فتح التحدي
+                let allDone = Object.values(completed).every(v => v);
+                if(allDone) {
+                    unlockBadge('expert');
+                    document.getElementById('btn-challenge').disabled = false;
+                    document.getElementById('btn-challenge').style.background = 'var(--accent)';
+                    document.getElementById('lock-hint').innerText = "تم فتح التحدي بنجاح!";
+                }
+                
+                document.getElementById('overlay-question').style.display = 'none';
+                changeScreen('screen-game', 'screen-modes');
+            } else {
+                alert("إجابة خاطئة. تذكر أن كل نوع يحتوي على 13 ورقة من أصل 52.");
+            }
+        }
+
+        // نظام الأوسمة
+        function unlockBadge(type) {
+            if(type === 'explorer') document.getElementById('badge-explorer').classList.add('unlocked');
+            if(type === 'expert') document.getElementById('badge-expert').classList.add('unlocked');
+            if(type === 'pro') document.getElementById('badge-pro').classList.add('unlocked');
+        }
+
+        function showMiniGuide() {
+            alert("مرجع سريع:\n- المجموع الكلي: 52\n- كل شكل (♥♦♠♣): 13 كرت\n- الأحمر: 26، الأسود: 26");
+        }
+    </script>
+</body>
+</html>
             justify-content: center; align-items: center; z-index: 1000;
         }
 
