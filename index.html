@@ -7,66 +7,325 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --ink: #1a1a1a; --paper: #f4f1e6; --desk: #4B6375; --accent: #B4666F; 
-            --dark-faded-red: #8B4513; /* أحمر غامق باهت */
+            --ink: #1a1a1a; --paper: #f4f1e6; 
+            --desk: #829494; /* اللون المطلوب */
+            --accent: #B4666F; 
+            --card-red: #ab3c43; /* اللون الأحمر المطلوب */
             --gold: #f1c40f; --success: #27ae60; 
         }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Cairo', sans-serif; overflow: hidden; background: var(--desk); }
-        .screen { position: absolute; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
-        .hidden { display: none !important; }
-        .glass-box { background: var(--paper); border: 6px solid var(--ink); padding: 25px; text-align: center; box-shadow: 15px 15px 0px rgba(0,0,0,0.3); width: 90%; max-width: 600px; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Cairo', sans-serif; overflow: hidden; background: var(--desk); color: var(--ink); }
+        .screen { position: absolute; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; transition: 0.4s; }
+        .hidden { display: none !important; opacity: 0; }
+        .glass-box { background: var(--paper); border: 5px solid var(--ink); padding: 25px; text-align: center; box-shadow: 12px 12px 0px rgba(0,0,0,0.2); width: 90%; max-width: 550px; position: relative; }
         
+        /* Dashboard */
+        .top-bar { position: fixed; top: 0; width: 100%; background: var(--ink); color: white; padding: 10px 20px; display: flex; justify-content: space-between; z-index: 100; font-size: 14px; box-sizing: border-box; }
+
         /* الأوسمة */
         .badges-container { display: flex; justify-content: center; gap: 15px; margin: 15px 0; }
-        .badge { width: 60px; height: 60px; background: #bbb; border-radius: 50%; border: 3px solid var(--ink); display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0.5; filter: grayscale(1); transition: 0.3s; }
-        .badge.unlocked { opacity: 1; filter: grayscale(0); background: var(--gold); border-color: var(--accent); transform: scale(1.1); }
+        .badge { width: 55px; height: 55px; background: #ccc; border-radius: 50%; border: 3px solid var(--ink); display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0.4; filter: grayscale(1); transition: 0.3s; position: relative; }
+        .badge.unlocked { opacity: 1; filter: grayscale(0); background: var(--gold); transform: scale(1.1); }
 
-        .btn { background: var(--ink); color: white; border: none; padding: 12px 25px; font-size: 16px; cursor: pointer; margin: 5px; transition: 0.3s; font-family: 'Cairo'; border-radius: 4px; }
+        .btn { background: var(--ink); color: white; border: none; padding: 12px 24px; font-size: 16px; cursor: pointer; margin: 5px; transition: 0.2s; font-family: 'Cairo'; border-radius: 4px; }
         .btn:hover:not(:disabled) { background: var(--accent); transform: translateY(-2px); }
         .btn:disabled { background: #888; cursor: not-allowed; }
 
-        .status-header { background: var(--ink); color: white; padding: 8px 20px; border-radius: 30px; margin-bottom: 15px; display: flex; gap: 25px; font-size: 14px; }
-        .notebook { width: 280px; background: white; border: 4px solid var(--ink); padding: 15px; cursor: pointer; border-radius: 8px; }
-        .chart-bar-container { display: flex; justify-content: space-around; align-items: flex-end; height: 120px; border-bottom: 2px solid var(--ink); margin-top: 10px; }
-        .bar { width: 30px; transition: height 0.4s; border: 2px solid var(--ink); }
-        
-        /* الكرت بخلفية */
-        .deck { width: 120px; height: 170px; background: #800000 url('https://i.pinimg.com/originals/81/44/7e/81447e704040a4d805096f264870f07f.png') center/cover; border: 4px solid var(--ink); border-radius: 10px; cursor: pointer; box-shadow: 8px 8px 0px var(--ink); margin: 20px 0; position: relative; }
-        .deck::after { content: "اسحب"; position: absolute; bottom: 10px; left: 0; width: 100%; color: white; font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px black; }
+        /* المحاكاة */
+        .notebook { width: 300px; background: white; border: 4px solid var(--ink); padding: 15px; cursor: pointer; border-radius: 8px; margin-bottom: 10px; }
+        .chart-bar-container { display: flex; justify-content: space-around; align-items: flex-end; height: 100px; border-bottom: 2px solid var(--ink); }
+        .bar-wrap { display: flex; flex-direction: column; align-items: center; width: 20%; }
+        .bar { width: 100%; transition: height 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 2px solid var(--ink); border-bottom: none; }
+        .bar-label { font-size: 10px; font-weight: bold; margin-top: 5px; }
+        .bar-val { font-size: 9px; color: #555; }
 
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 1000; }
-        .pop-card { background: white; padding: 30px; border: 6px solid var(--ink); width: 85%; max-width: 450px; text-align: center; border-radius: 12px; color: var(--ink); }
-        #help-icon { position: fixed; bottom: 20px; right: 20px; background: var(--paper); border: 3px solid var(--ink); width: 50px; height: 50px; border-radius: 50%; display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 100; font-weight: bold; font-size: 20px; color: var(--ink); }
+        .deck { width: 110px; height: 160px; background: #800000 url('https://i.pinimg.com/originals/81/44/7e/81447e704040a4d805096f264870f07f.png') center/cover; border: 4px solid var(--ink); border-radius: 10px; cursor: pointer; box-shadow: 6px 6px 0px var(--ink); margin: 15px 0; transition: 0.2s; }
+        .deck:active { transform: scale(0.95); }
+
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .pop-card { background: white; padding: 30px; border: 6px solid var(--ink); width: 85%; max-width: 400px; text-align: center; border-radius: 12px; }
+
+        #help-btn { position: fixed; bottom: 20px; right: 20px; background: var(--paper); border: 3px solid var(--ink); width: 45px; height: 45px; border-radius: 50%; display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 90; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div id="help-icon" onclick="showMiniGuide()">؟</div>
+    <div id="dashboard" class="top-bar hidden">
+        <div id="ui-mode">الوضع: القائمة</div>
+        <div id="ui-score">النقاط: 0</div>
+        <div id="ui-timer" class="hidden">⏱️ 60</div>
+    </div>
+
+    <div id="help-btn" onclick="showHowToPlay()">؟</div>
 
     <div id="screen-main" class="screen">
         <div class="glass-box">
-            <h1 style="font-size: 60px; margin: 0; color: var(--accent);">PROBCARD</h1>
-            <p>مختبر استكشاف الاحتمالات</p>
+            <h1 style="font-size: 55px; margin: 0; color: var(--card-red);">PROBCARD</h1>
+            <p>مختبر استكشاف الاحتمالات الذكي</p>
             <div class="badges-container">
-                <div id="badge-explorer" class="badge" onclick="alert('وسام المستكشف: يُمنح عند إنهاء أول وضع تعليمي.')">🧭</div>
-                <div id="badge-expert" class="badge" onclick="alert('وسام الخبير: يُمنح عند ختم جميع الدروس الأربعة.')">🎓</div>
-                <div id="badge-pro" class="badge" onclick="alert('وسام المحترف: يُمنح عند جمع 100 نقطة في التحدي.')">👑</div>
+                <div id="badge-explorer" class="badge" title="وسام المستكشف: أنهِ أول وضع تعليمي">🧭</div>
+                <div id="badge-expert" class="badge" title="وسام الخبير: اختم جميع الأوضاع التعليمية">🎓</div>
+                <div id="badge-pro" class="badge" title="وسام المحترف: سجل 100 نقطة في التحدي">👑</div>
             </div>
-            <button class="btn" onclick="toggleAbout(true)">عن اللعبة</button>
-            <button class="btn" style="background: var(--accent);" onclick="startFlow()">ابدأ اللعب</button>
-        </div>
-    </div>
-
-    <div id="overlay-about" class="overlay" onclick="toggleAbout(false)">
-        <div class="pop-card" onclick="event.stopPropagation()">
-            <h2 style="color: var(--accent);">حول اللعبة</h2>
-            <p style="text-align: right; font-size: 14px; line-height: 1.6;">رحلة تفاعلية لاستكشاف الاحتمالات باستخدام البطاقات. إعداد الطالبات: فرح الغامدي، ريم مقيبل، تالين الحازمي، عريب المولد، جيان حرقاني. بإشراف: زهرة الشمراني.</p>
-            <button class="btn" onclick="toggleAbout(false)">إغلاق</button>
+            <button class="btn" onclick="showAbout()">عن اللعبة</button>
+            <button class="btn" style="background: var(--card-red);" onclick="startApp()">ابدأ اللعب</button>
         </div>
     </div>
 
     <div id="screen-guide" class="screen hidden">
         <div class="glass-box" style="text-align: right;">
+            <h2 style="text-align: center; color: var(--card-red);">📘 دليل المختبر</h2>
+            <p>قبل البدء، تذكر أن رزمة الكروت تحتوي <b>52 بطاقة</b>:</p>
+            <ul>
+                <li><span style="color:var(--card-red)">♥ ♦</span> حمراء (26 بطاقة)</li>
+                <li><span>♠ ♣</span> سوداء (26 بطاقة)</li>
+                <li>كل نوع (مثلاً القلوب ♥) يمثل 13 بطاقة.</li>
+            </ul>
+            <p>ستتعلم كيف تتغير الاحتمالات عند السحب في ظروف مختلفة.</p>
+            <button class="btn" style="width: 100%;" onclick="viewedGuide()">فهمت، لنبدأ</button>
+        </div>
+    </div>
+
+    <div id="screen-modes" class="screen hidden">
+        <div class="glass-box">
+            <h2 style="color: var(--card-red);">اختر المسار التعليمي</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button class="btn" onclick="initMode('independent')">مستقلة</button>
+                <button class="btn" onclick="initMode('dependent')">غير مستقلة</button>
+                <button class="btn" onclick="initMode('mutually')">متنافية</button>
+                <button class="btn" onclick="initMode('non-mutually')">غير متنافية</button>
+            </div>
+            <hr style="margin:20px 0; opacity:0.1;">
+            <button id="btn-challenge" class="btn" style="width: 100%; background: #555;" disabled onclick="startChallenge()">🔒 وضع التحدي</button>
+            <p id="lock-hint" style="font-size: 11px; color: var(--card-red); margin-top: 5px;">أكمل الأوضاع التعليمية لفتح التحدي</p>
+        </div>
+    </div>
+
+    <div id="screen-game" class="screen hidden">
+        <div class="notebook" onclick="showExplanation()">
+            <p style="font-size: 12px; font-weight: bold; text-align: center; margin:0;">📊 سجل البيانات الحية</p>
+            <div class="chart-bar-container" id="bars-ui">
+                </div>
+            <p style="font-size: 9px; color: var(--accent); text-align: center; margin-top:5px;">(اضغط على الدفتر للشرح العلمي)</p>
+        </div>
+        
+        <div class="deck" onclick="handleDraw()"></div>
+        
+        <div id="mission-msg" style="width: 280px; background: white; padding: 10px; border: 2px dashed var(--ink); font-size: 13px; text-align: center; border-radius: 8px;">
+            جاري التحميل...
+        </div>
+
+        <div style="margin-top: 20px;">
+            <button class="btn" onclick="navTo('screen-modes')">🔙 انسحاب</button>
+            <button id="btn-to-mastery" class="btn" style="background: var(--success); display:none;" onclick="goToMastery()">سؤال الإتقان ➔</button>
+        </div>
+    </div>
+
+    <div id="overlay" class="overlay">
+        <div class="pop-card" id="pop-content"></div>
+    </div>
+
+    <script>
+        // --- State Model ---
+        let state = JSON.parse(localStorage.getItem('probcard_state')) || {
+            score: 0,
+            completedModes: [],
+            badges: { explorer: false, expert: false, pro: false },
+            settings: { howToPlaySeen: false }
+        };
+
+        let currentMode = '';
+        let deckCount = 52;
+        let suits = { H: 13, S: 13, D: 13, C: 13 };
+        let drawCount = 0;
+        let challengeTimer = null;
+        let timeLeft = 60;
+
+        // --- Core Logic ---
+        function startApp() {
+            navTo(state.settings.howToPlaySeen ? 'screen-modes' : 'screen-guide');
+            updateBadgesUI();
+        }
+
+        function viewedGuide() {
+            state.settings.howToPlaySeen = true;
+            save();
+            navTo('screen-modes');
+        }
+
+        function initMode(mode) {
+            currentMode = mode;
+            deckCount = 52;
+            suits = { H: 13, S: 13, D: 13, C: 13 };
+            drawCount = 0;
+            document.getElementById('ui-mode').innerText = "الوضع: " + getModeAr(mode);
+            document.getElementById('btn-to-mastery').style.display = 'none';
+            
+            showIntroQuestion(mode);
+        }
+
+        function showIntroQuestion(mode) {
+            const content = document.getElementById('pop-content');
+            let q = "";
+            if(mode === 'independent') q = "في الحوادث المستقلة، هل يتأثر احتمال السحبة الثانية بالسحبة الأولى؟";
+            else if(mode === 'dependent') q = "في الحوادث غير المستقلة، إذا سحبنا كرت ولم نرجعه، هل يقل المقام (العدد الكلي)؟";
+            else q = "هل أنت مستعد لبدء محاكاة " + getModeAr(mode) + "؟";
+
+            content.innerHTML = `<h3>❓ سؤال تمهيدي (+10)</h3><p>${q}</p>
+                <button class="btn" onclick="startSim(true)">نعم</button>
+                <button class="btn" onclick="startSim(false)">لا</button>`;
+            document.getElementById('overlay').style.display = 'flex';
+        }
+
+        function startSim(correct) {
+            if(correct) state.score += 10;
+            document.getElementById('overlay').style.display = 'none';
+            navTo('screen-game');
+            updateSimUI();
+            setMission();
+        }
+
+        function setMission() {
+            const msgs = {
+                independent: "اسحب 3 كروت. لاحظ أن الاحتمالات لا تتغير (إرجاع).",
+                dependent: "اسحب 3 كروت. لاحظ كيف تنقص الاحتمالات (بدون إرجاع).",
+                mutually: "اسحب كرتين. ابحث عن احتمال ظهور (ملك ورقم 5) معاً.",
+                'non-mutually': "اسحب كرتين. ابحث عن احتمال (كرت أحمر وملك) معاً."
+            };
+            document.getElementById('mission-msg').innerText = msgs[currentMode];
+        }
+
+        function handleDraw() {
+            drawCount++;
+            const suitKeys = Object.keys(suits);
+            const picked = suitKeys[Math.floor(Math.random() * suitKeys.length)];
+
+            if(currentMode === 'dependent' || currentMode === 'challenge') {
+                if(suits[picked] > 0) {
+                    suits[picked]--;
+                    deckCount--;
+                }
+            }
+            
+            updateSimUI();
+            if(drawCount >= 3) document.getElementById('btn-to-mastery').style.display = 'inline-block';
+        }
+
+        function updateSimUI() {
+            const container = document.getElementById('bars-ui');
+            container.innerHTML = '';
+            const symbols = {H:'♥', S:'♠', D:'♦', C:'♣'};
+            
+            for(let key in suits) {
+                let prob = (suits[key] / deckCount * 100).toFixed(0);
+                container.innerHTML += `
+                    <div class="bar-wrap">
+                        <div class="bar" style="height:${prob}%; background:${(key==='H'||key==='D')?'var(--card-red)':'var(--ink)'}"></div>
+                        <span class="bar-label">${symbols[key]}</span>
+                        <span class="bar-val">${suits[key]}/${deckCount}</span>
+                        <span class="bar-val">${prob}%</span>
+                    </div>
+                `;
+            }
+            document.getElementById('ui-score').innerText = "النقاط: " + state.score;
+        }
+
+        function showExplanation() {
+            const content = document.getElementById('pop-content');
+            let txt = currentMode === 'independent' ? "الاحتمالات ثابتة دائماً (13/52) لأن الحادثة الأولى لا تؤثر على الثانية." : "الاحتمالات تتغير لأن سحب الكرت يغير فضاء العينة (المقام) وعدد الكروت المتبقية.";
+            content.innerHTML = `<h3>📘 الدفتر العلمي</h3><p>${txt}</p><button class="btn" onclick="closePop()">فهمت</button>`;
+            document.getElementById('overlay').style.display = 'flex';
+        }
+
+        function goToMastery() {
+            const content = document.getElementById('pop-content');
+            content.innerHTML = `<h3>🎯 سؤال الإتقان (+20)</h3><p>إذا كان احتمال الحدث A هو 1/4، فما احتمال عدم وقوعه (الحدث المتمم)؟</p>
+                <button class="btn" onclick="finishMode(true)">3/4</button>
+                <button class="btn" onclick="finishMode(false)">1/4</button>`;
+            document.getElementById('overlay').style.display = 'flex';
+        }
+
+        function finishMode(correct) {
+            if(correct) {
+                state.score += 20;
+                if(!state.completedModes.includes(currentMode)) state.completedModes.push(currentMode);
+                checkBadges();
+                save();
+                alert("أحسنت! تم إكمال " + getModeAr(currentMode));
+                navTo('screen-modes');
+            } else alert("حاول مرة أخرى");
+            closePop();
+        }
+
+        // --- Challenge Mode ---
+        function startChallenge() {
+            currentMode = 'challenge';
+            state.challengeScore = 0;
+            timeLeft = 60;
+            navTo('screen-game');
+            document.getElementById('ui-timer').classList.remove('hidden');
+            document.getElementById('mission-msg').innerText = "أجب على أكبر قدر من الأسئلة في 60 ثانية!";
+            
+            challengeTimer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('ui-timer').innerText = "⏱️ " + timeLeft;
+                if(timeLeft <= 0) endChallenge();
+            }, 1000);
+        }
+
+        function endChallenge() {
+            clearInterval(challengeTimer);
+            document.getElementById('ui-timer').classList.add('hidden');
+            let success = state.score >= 75;
+            if(state.score >= 100) state.badges.pro = true;
+            save();
+            alert(success ? "تم اجتياز التحدي بنجاح!" : "انتهى الوقت، حاول مرة أخرى.");
+            navTo('screen-modes');
+        }
+
+        // --- Helpers ---
+        function navTo(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            document.getElementById('help-btn').style.display = 'flex';
+        }
+
+        function getModeAr(m) {
+            const map = {independent:'مستقلة', dependent:'غير مستقلة', mutually:'متنافية', 'non-mutually':'غير متنافية', challenge:'التحدي'};
+            return map[m];
+        }
+
+        function checkBadges() {
+            if(state.completedModes.length >= 1) state.badges.explorer = true;
+            if(state.completedModes.length === 4) {
+                state.badges.expert = true;
+                document.getElementById('btn-challenge').disabled = false;
+                document.getElementById('btn-challenge').style.background = 'var(--accent)';
+                document.getElementById('btn-challenge').innerText = "🔓 دخول التحدي";
+            }
+            updateBadgesUI();
+        }
+
+        function updateBadgesUI() {
+            if(state.badges.explorer) document.getElementById('badge-explorer').classList.add('unlocked');
+            if(state.badges.expert) document.getElementById('badge-expert').classList.add('unlocked');
+            if(state.badges.pro) document.getElementById('badge-pro').classList.add('unlocked');
+        }
+
+        function save() { localStorage.setItem('probcard_state', JSON.stringify(state)); }
+        function closePop() { document.getElementById('overlay').style.display = 'none'; }
+        function showAbout() {
+            const content = document.getElementById('pop-content');
+            content.innerHTML = `<h3>عن PROBCARD</h3><p>مشروع مادة الرياضيات - الصف الثاني متوسط (موهبة).<br>إعداد: فرح الغامدي وفريقها المبدع.<br>بإشراف المعلمة: زهرة الشمراني.</p><button class="btn" onclick="closePop()">إغلاق</button>`;
+            document.getElementById('overlay').style.display = 'flex';
+        }
+        function showHowToPlay() { navTo('screen-guide'); }
+
+        // تهيئة عند التشغيل
+        checkBadges();
+    </script>
+</body>
+</html>
             <h2 style="text-align: center; color: var(--accent);">📖 دليل الكروت</h2>
             <p>الرزمة (52 بطاقة):<br>
             - <span style="color:var(--dark-faded-red)">♥ ♦</span> حمراء (26 كرت)<br>
