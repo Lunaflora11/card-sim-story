@@ -1,0 +1,16 @@
+:root { 
+    --ink: #1a1a1a; --paper: #f4f1e6; 
+    --desk: #829494; --accent: #B4666F; 
+    --card-red: #ab3c43; --gold: #f1c40f; 
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Cairo', sans-serif; background: var(--desk); height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.screen { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; transition: 0.3s; }
+.hidden { display: none !important; }
+.glass-box { background: var(--paper); border: 4px solid var(--ink); padding: 25px; text-align: center; width: 100%; max-width: 340px; box-shadow: 10px 10px 0px rgba(0,0,0,0.2); }
+.main-btn { background: var(--ink); color: white; border: none; padding: 12px; width: 100%; margin: 6px 0; font-family: 'Cairo'; font-weight: bold; border-radius: 6px; cursor: pointer; }
+.red-btn { background: var(--card-red); }
+.top-info { position: fixed; top: 0; width: 100%; background: var(--ink); color: white; padding: 10px; display: flex; justify-content: space-between; font-size: 13px; z-index: 100; }
+.chart { display: flex; justify-content: space-around; align-items: flex-end; height: 70px; border-bottom: 2px solid #ccc; }
+.bar { width: 18%; border: 2px solid var(--ink); border-bottom: none; transition: height 0.4s; }
+.card-deck { width: 80px; height: 115px; background: var(--card-red) url('https://i.pinimg.com/originals/81/44/7e/81447e704040a4d805096f264870f07f.png') center/cover; border: 3px solid var(--ink); border-radius: 8px; margin: 15px 0; box-shadow: 5px 5px 0px var(--ink); }
