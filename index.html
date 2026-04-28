@@ -3,39 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PROBCARD</title>
-    <link rel="stylesheet" href="style.css"> <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <title>PROBCARD - مختبر الاحتمالات</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div id="ui-top" class="top-info hidden">
-        <span id="label-mode">الوضع: -</span>
-        <span id="label-score">النقاط: 0</span>
+    <div id="dashboard" class="top-bar hidden">
+        <div id="ui-mode">الوضع: القائمة</div>
+        <div id="ui-score">النقاط: 0</div>
+        <div id="ui-timer" class="hidden">⏱️ 60</div>
     </div>
 
-    <div id="screen-start" class="screen">
+    <div id="help-btn" onclick="showHowToPlay()">؟</div>
+
+    <div id="screen-main" class="screen">
         <div class="glass-box">
-            <h1 style="color: var(--card-red); font-size: 40px;">PROBCARD</h1>
-            <button class="main-btn red-btn" onclick="startPlay()">ابدأ اللعب</button>
+            <h1 style="font-size: 55px; margin: 0; color: var(--card-red);">PROBCARD</h1>
+            <p>مختبر استكشاف الاحتمالات الذكي</p>
+            <div class="badges-container">
+                <div id="badge-explorer" class="badge">🧭</div>
+                <div id="badge-expert" class="badge">🎓</div>
+                <div id="badge-pro" class="badge">👑</div>
+            </div>
+            <button class="btn" onclick="showAbout()">عن اللعبة</button>
+            <button class="btn" style="background: var(--card-red);" onclick="startApp()">ابدأ اللعب</button>
+        </div>
+    </div>
+
+    <div id="screen-guide" class="screen hidden">
+        <div class="glass-box" style="text-align: right;">
+            <h2 style="text-align: center; color: var(--card-red);">📘 دليل المختبر</h2>
+            <p>رزمة الكروت تحتوي <b>52 بطاقة</b>:</p>
+            <ul>
+                <li><span style="color:var(--card-red)">♥ ♦</span> حمراء (26)</li>
+                <li><span>♠ ♣</span> سوداء (26)</li>
+            </ul>
+            <button class="btn" style="width: 100%;" onclick="viewedGuide()">فهمت، لنبدأ</button>
         </div>
     </div>
 
     <div id="screen-modes" class="screen hidden">
         <div class="glass-box">
-            <h2>اختر الوضع</h2>
-            <button class="main-btn" onclick="selectMode('مستقلة')">مستقلة</button>
-            <button class="main-btn" onclick="selectMode('غير مستقلة')">غير مستقلة</button>
-            <button class="main-btn red-btn" onclick="showScreen('screen-start')">عودة</button>
+            <h2 style="color: var(--card-red);">اختر المسار التعليمي</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button class="btn" onclick="initMode('independent')">مستقلة</button>
+                <button class="btn" onclick="setupGame('dependent')">غير مستقلة</button> <button class="btn" onclick="initMode('mutually')">متنافية</button>
+                <button class="btn" onclick="initMode('non-mutually')">غير متنافية</button>
+            </div>
+            <hr style="margin:20px 0; opacity:0.1;">
+            <button id="btn-challenge" class="btn" style="width: 100%; background: #555;" disabled onclick="startChallenge()">🔒 وضع التحدي</button>
         </div>
     </div>
 
-    <div id="screen-play" class="screen hidden">
-        <div class="glass-box">
-            <div class="chart" id="game-chart"></div>
-            <div class="card-deck" onclick="drawCard()"></div>
-            <button class="main-btn" onclick="showScreen('screen-modes')">تغيير الوضع</button>
+    <div id="screen-game" class="screen hidden">
+        <div class="notebook" onclick="showExplanation()">
+            <p style="font-size: 12px; font-weight: bold; text-align: center; margin:0;">📊 سجل البيانات الحية</p>
+            <div class="chart-bar-container" id="bars-ui"></div>
+        </div>
+        <div class="deck" onclick="handleDraw()"></div>
+        <div id="mission-msg" style="width: 280px; background: white; padding: 10px; border: 2px dashed #1a1a1a; font-size: 13px; text-align: center;"></div>
+        <div style="margin-top: 20px;">
+            <button class="btn" onclick="navTo('screen-modes')">🔙 انسحاب</button>
+            <button id="btn-to-mastery" class="btn" style="background: var(--success); display:none;" onclick="goToMastery()">سؤال الإتقان ➔</button>
         </div>
     </div>
 
-    <script src="script.js"></script> </body>
+    <div id="overlay" class="overlay">
+        <div class="pop-card" id="pop-content"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
 </html>
